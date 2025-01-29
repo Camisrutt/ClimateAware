@@ -1,0 +1,190 @@
+/* App.css */
+:root {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-card: #333333;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --accent-primary: #0078d7;
+  --accent-secondary: #00a4ef;
+  --accent-success: #2ecc71;
+  --border-color: #404040;
+  --hover-color: #404040;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header h1 {
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  font-size: 2.5em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 1.1em;
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  justify-content: center;
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.select:hover {
+  background-color: var(--hover-color);
+  border-color: var(--accent-primary);
+}
+
+.refresh-button {
+  padding: 8px 16px;
+  background: linear-gradient(to bottom, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  border: 1px solid var(--accent-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.refresh-button:hover {
+  background: linear-gradient(to bottom, var(--accent-secondary), var(--accent-primary));
+  box-shadow: 0 0 10px rgba(0, 120, 215, 0.3);
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.error {
+  text-align: center;
+  padding: 20px;
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 8px;
+  margin: 20px 0;
+  border: 1px solid #e74c3c;
+}
+
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.article-card {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  background-color: var(--bg-card);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.article-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  border-color: var(--accent-primary);
+}
+
+.article-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.category {
+  color: var(--accent-success);
+  font-weight: bold;
+  font-size: 14px;
+  padding: 4px 8px;
+  background: rgba(46, 204, 113, 0.1);
+  border-radius: 4px;
+}
+
+.source {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.source:hover {
+  color: var(--accent-primary);
+}
+
+.title {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 10px;
+  transition: color 0.3s ease;
+}
+
+.title:hover {
+  color: var(--accent-primary);
+}
+
+.summary {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.date {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: italic;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
