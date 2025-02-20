@@ -143,52 +143,35 @@ const NEWS_FEEDS = {
     },
     NOAA: {
         urls: [
-            'https://www.climate.gov/news-features/feed',
-            'https://www.noaa.gov/feed/news'
+            'https://www.ncei.noaa.gov/access/monitoring/monthly-report/rss.xml'
+        ],
+        categories: ['Weather Patterns', 'Ocean Data', 'Atmospheric Research']
+    },
+    ClimateWeatherGov: {
+        urls: [
+            'https://www.climate.gov/feeds/news-features/climatetech.rss',
+            'https://www.climate.gov/feeds/news-features/climateand.rss',
+            'https://www.climate.gov/feeds/news-features/understandingclimate.rss',
+            'https://www.climate.gov/feeds/news-features/casestudies.rss',
+            'https://www.weather.gov/wrn/xml/rss_alert.xml'
         ],
         categories: ['Weather Patterns', 'Ocean Data', 'Atmospheric Research']
     },
     UN_Climate: {
         urls: [
-            'https://unfccc.int/news/feed',
+            'https://news.un.org/feed/subscribe/en/news/topic/migrants-and-refugees/feed/rss.xml',
             'https://news.un.org/feed/subscribe/en/news/topic/climate-change/feed/rss.xml'
         ],
         categories: ['Global Policy', 'International Action', 'Climate Agreements']
     },
     
-    // Weather Services
-    Weather_Gov: {
-        urls: [
-            'https://www.weather.gov/wrn/xml/rss_alert.xml',   // Weather alerts
-            'https://www.weather.gov/hazards/rss',             // Hazard alerts
-            'https://www.weather.gov/outlooks/rss'             // Weather outlooks
-        ],
-        categories: ['Weather Alerts', 'Hazards', 'Forecasts']
-    },
-    
-    AccuWeather: {
-        urls: [
-            'https://rss.accuweather.com/rss/news/en-us',        // News
-            'https://rss.accuweather.com/rss/blog/en-us',        // Blog
-            'https://rss.accuweather.com/rss/hurricane/en-us'    // Hurricane news
-        ],
-        categories: ['Weather News', 'Weather Analysis', 'Extreme Weather']
-    },
-    
-    IPCC: {
-        urls: [
-            'https://www.ipcc.ch/feed/press-releases',           // Press releases
-            'https://www.ipcc.ch/feed/news',                     // News
-            'https://www.ipcc.ch/feed/events'                    // Events and reports
-        ],
-        categories: ['Climate Science', 'Research Reports', 'Climate Policy']
-    },
+    // Weather Services  
+    //AccuWeather 
+    //IPCC
     
     BBC_Climate: {
         urls: [
-            'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml',  // Science & Environment
-            'https://feeds.bbci.co.uk/news/topics/c4y3wxv70g4t/rss.xml',     // Climate Change news
-            'https://feeds.bbci.co.uk/news/topics/cez1nz919vxt/rss.xml'      // Environment news
+            'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml'  // Science & Environment  
         ],
         categories: ['Climate News', 'Environmental Reports', 'Science Coverage']
     },
@@ -198,7 +181,7 @@ const NEWS_FEEDS = {
         urls: [
             'https://350.org/feed/',
             'https://climatejusticealliance.org/feed/',
-            'https://www.climateactionnetwork.ca/feed/'
+            'https://feeds.feedburner.com/ConservationInternationalBlog'
         ],
         categories: ['Community Action', 'Climate Justice', 'Local Initiatives']
     },
@@ -206,22 +189,22 @@ const NEWS_FEEDS = {
     // Added: Indigenous Knowledge Sources
     Indigenous_Climate: {
         urls: [
-            'https://www.indigenousclimateaction.com/feed',
-            'https://www.indianz.com/climate/feed',
-            'https://www.indigenousclimateknowledge.org/feed'
+            // Indigenous Climate Action
+            'https://indianz.com/rss/news.xml'
+           //'https://www.indigenousclimateknowledge.org/feed'
         ],
         categories: ['Traditional Knowledge', 'Indigenous Perspectives', 'Land Management']
     },
     
     // Added: Local Impact Sources
-    Local_Climate_Impact: {
-        urls: [
-            'https://www.localclimateimpacts.org/feed',
-            'https://climatechangeresponses.org/feed',
-            'https://www.climatereporting.org/local/feed'
-        ],
-        categories: ['Local Impacts', 'Community Response', 'Regional Analysis']
-    }
+  //  Local_Climate_Impact: {
+  //      urls: [
+  //          'https://www.localclimateimpacts.org/feed',
+   //         'https://climatechangeresponses.org/feed',
+   //         'https://www.climatereporting.org/local/feed'
+  //      ],
+  //      categories: ['Local Impacts', 'Community Response', 'Regional Analysis']
+  //  }
 };
 
 /**
