@@ -57,99 +57,93 @@ function App() {
 
   return (
     <div className="app">
-      <header className="header">
-        <h1>Climate Change News Tracker</h1>
-        <p>Aggregating important climate change articles from trusted sources</p>
-      </header>
+        <div className="sidebar">
+            <header className="header">
+                <h1>Climate Change News Tracker</h1>
+                <p>Aggregating important climate change articles from trusted sources</p>
+            </header>
 
-      <div className="controls">
-        <select 
-          value={selectedSource}
-          onChange={(e) => setSelectedSource(e.target.value)}
-          className="select"
-        >
-          {sources.map(source => (
-            <option key={source} value={source}>
-              {source.charAt(0).toUpperCase() + source.slice(1)}
-            </option>
-          ))}
-        </select>
+            <div className="controls">
+                <select 
+                    value={selectedSource}
+                    onChange={(e) => setSelectedSource(e.target.value)}
+                    className="select"
+                >
+                    {sources.map(source => (
+                        <option key={source} value={source}>
+                            {source.charAt(0).toUpperCase() + source.slice(1)}
+                        </option>
+                    ))}
+                </select>
 
-        <select 
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="select"
-        >
-          {categories.map(category => (
-            <option key={category} value={category}>
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </option>
-          ))}
-        </select>
+                <select 
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="select"
+                >
+                    {categories.map(category => (
+                        <option key={category} value={category}>
+                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                        </option>
+                    ))}
+                </select>
 
-        <button onClick={fetchArticles} className="refresh-button">
-          Refresh
-        </button>
-      </div>
-
-      {loading && (
-        <div className="loading">
-          Loading articles...
-        </div>
-      )}
-
-      {error && (
-        <div className="error">
-          {error}
-        </div>
-      )}
-
-      {!loading && !error && filteredArticles.length === 0 && (
-        <div className="no-articles">
-          No articles found. Try refreshing or changing filters.
-        </div>
-      )}
-
-      <div className="articles-grid">
-        {filteredArticles.map((article, index) => (
-          <article key={index} className="article-card">
-            <div className="article-header">
-              <span className="category">{article.category}</span>
-              <a 
-                href={article.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="source"
-              >
-                {article.source}
-              </a>
+                <button onClick={fetchArticles} className="refresh-button">
+                    Find Info
+                </button>
             </div>
+        </div>
+
+        <main className="main-content">
+            {loading && <div className="loading">Loading articles...</div>}
             
-            <h2>
-              <a 
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="title"
-              >
-                {article.title}
-              </a>
-            </h2>
+            {error && <div className="error">{error}</div>}
             
-            <p className="summary">{article.summary}</p>
-            
-            <div className="date">
-              {new Date(article.date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
+            {!loading && !error && filteredArticles.length === 0 && (
+                <div className="no-articles">
+                    No articles found. Try refreshing or changing filters.
+                </div>
+            )}
+
+            <div className="articles-grid">
+                {filteredArticles.map((article, index) => (
+                    <article key={index} className="article-card">
+                        <div className="article-header">
+                            <span className="category">{article.category}</span>
+                            <a 
+                                href={article.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="source"
+                            >
+                                {article.source}
+                            </a>
+                        </div>
+                        
+                        <a 
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="title"
+                        >
+                            {article.title}
+                        </a>
+                        
+                        <p className="summary">{article.summary}</p>
+                        
+                        <div className="date">
+                            {new Date(article.date).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            })}
+                        </div>
+                    </article>
+                ))}
             </div>
-          </article>
-        ))}
-      </div>
+        </main>
     </div>
-  );
+);
 }
 
 export default App;
