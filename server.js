@@ -170,6 +170,12 @@ app.use(cors({
     });
   }
 
+  function stringSimilarity(str1, str2) {
+    const s1 = str1.toLowerCase();
+    const s2 = str2.toLowerCase();
+    return s1 === s2 ? 1 : 0;  // Simple exact match for now
+}
+
   const CLIMATE_KEYWORDS = {
     primary: [
       'climate change', 'global warming', 'greenhouse gas', 'carbon emissions',
@@ -296,77 +302,102 @@ async function fetchFeedWithRetry(url, maxRetries = 2) {
  * Processes and normalizes the data from different sources
  */
 async function fetchArticles() {
-    try {
-      const allArticles = [];
-      const processedArticles = {
-        climate_primary: [],
-        climate_related: [],
-        science_other: []
-      };
-  
-      // Fetch and initial processing
+  try {
+      console.log('Attempting to fetch feeds...');
+      let allArticles = [];
+
       for (const [source, sourceData] of Object.entries(NEWS_FEEDS)) {
-        // ... existing fetch logic ...
-        
-        const articles = feed.items.map(item => ({
-          // ... existing mapping ...
-          category: classifyArticle(item)
-        }));
-        
-        // Filter duplicates and categorize
-        for (const article of articles) {
-          if (!isDuplicate(article, allArticles)) {
-            allArticles.push(article);
-            processedArticles[article.category].push(article);
+          for (const feedUrl of sourceData.urls) {
+              try {
+                  console.log(`Trying feed from ${source}: ${feedUrl}`);
+                  const feed = await fetchFeedWithRetry(feedUrl);
+                  
+                  if (feed && feed.items) {
+                      const articles = feed.items.map(item => {
+                          const article = {
+                              title: item.title || 'No title available',
+                              source: source,
+                              sourceUrl: feedUrl,
+                              category: sourceData.categories[0],
+                              date: item.pubDate || new Date().toISOString(),
+                              summary: item.contentSnippet || item.content || item.description || 'No summary available',
+                              url: item.link || feedUrl,
+                              publisher: source
+                          };
+                          
+                          // Add content category
+                          article.contentCategory = classifyArticle(article);
+                          return article;
+                      });
+
+                      // Add non-duplicate articles
+                      for (const article of articles) {
+                          if (!isDuplicate(article, allArticles)) {
+                              allArticles.push(article);
+                          }
+                      }
+                      console.log(`Successfully fetched ${articles.length} articles from ${source}`);
+                  }
+              } catch (error) {
+                  console.error(`Error fetching from ${source} - ${feedUrl}:`, error);
+              }
           }
-        }
       }
-  
-      return {
-        climate_primary: processedArticles.climate_primary,
-        climate_related: processedArticles.climate_related,
-        science_other: processedArticles.science_other
+
+      // Sort articles by date (newest first)
+      allArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      // Group by category
+      const groupedArticles = {
+          climate_primary: allArticles.filter(a => a.contentCategory === CONTENT_CATEGORIES.CLIMATE_PRIMARY),
+          climate_related: allArticles.filter(a => a.contentCategory === CONTENT_CATEGORIES.CLIMATE_RELATED),
+          science_other: allArticles.filter(a => a.contentCategory === CONTENT_CATEGORIES.SCIENCE_OTHER),
+          all: allArticles
       };
-    } catch (error) {
+      
+      console.log(`Total articles fetched: ${allArticles.length}`);
+      return groupedArticles;
+  } catch (error) {
       console.error('Error in fetchArticles:', error);
       return {
-        climate_primary: [],
-        climate_related: [],
-        science_other: []
+          climate_primary: [],
+          climate_related: [],
+          science_other: [],
+          all: []
       };
-    }
   }
+}
 
 // API Routes
 
 // Get all articles with health metrics
 app.get('/api/articles', async (req, res) => {
     try {
-      const articles = await fetchArticles();
-      const healthMetrics = feedMonitor.getAllFeedsHealth();
-      
-      res.json({
-        success: true,
-        data: articles,
-        metadata: {
-          totalArticles: Object.values(articles).flat().length,
-          articlesByCategory: {
-            climate_primary: articles.climate_primary.length,
-            climate_related: articles.climate_related.length,
-            science_other: articles.science_other.length
-          },
-          fetchTime: new Date().toISOString(),
-          feedHealth: healthMetrics
-        }
-      });
+        const articles = await fetchArticles();
+        const healthMetrics = feedMonitor.getAllFeedsHealth();
+        
+        res.json({
+            success: true,
+            data: articles.all, // Send all articles for now
+            metadata: {
+                totalArticles: articles.all.length,
+                articlesByCategory: {
+                    climate_primary: articles.climate_primary.length,
+                    climate_related: articles.climate_related.length,
+                    science_other: articles.science_other.length
+                },
+                fetchTime: new Date().toISOString(),
+                feedHealth: healthMetrics
+            }
+        });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch articles',
-        details: error.message
-      });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch articles',
+            details: error.message
+        });
     }
-  });
+});
 
 // Get health metrics for all feeds
 app.get('/api/feed-health', (req, res) => {
