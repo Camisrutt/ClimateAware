@@ -184,3 +184,42 @@
 .refresh-button:hover {
   background-color: var(--accent-secondary);
 }
+
+.category-counts {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: var(--bg-primary);
+  border-radius: 4px;
+}
+
+.category-count {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.category-label {
+  font-weight: 500;
+}
+
+.count {
+  background-color: var(--accent-primary);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.8em;
+}
+
+/* Add these class variations for different category types */
+.article-card[data-category="climate_primary"] {
+  border-left: 3px solid #2ecc71;
+}
+
+.article-card[data-category="climate_related"] {
+  border-left: 3px solid #3498db;
+}
+
+.article-card[data-category="science_other"] {
+  border-left: 3px solid #95a5a6;
+}
