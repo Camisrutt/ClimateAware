@@ -1,17 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
-import { MessageSquarePlus } from 'lucide-react';
+import './Feedback.css';
 
 const FeedbackButton = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +7,8 @@ const FeedbackButton = () => {
   const [feedback, setFeedback] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     // Save feedback
     const feedbackData = {
       type: feedbackType,
@@ -43,76 +32,90 @@ const FeedbackButton = () => {
     }, 2000);
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          className="fixed bottom-4 right-4 gap-2"
-        >
-          <MessageSquarePlus className="h-5 w-5" />
-          Send Feedback
-        </Button>
-      </DialogTrigger>
+  if (!isOpen) {
+    return (
+      <button 
+        className="feedback-button"
+        onClick={() => setIsOpen(true)}
+      >
+        Send Feedback
+      </button>
+    );
+  }
 
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {submitted ? 'Thank You!' : 'Share Your Feedback'}
-          </DialogTitle>
-        </DialogHeader>
+  return (
+    <div className="feedback-overlay">
+      <div className="feedback-modal">
+        <div className="feedback-header">
+          <h2>{submitted ? 'Thank You!' : 'Share Your Feedback'}</h2>
+          <button 
+            className="close-button"
+            onClick={() => setIsOpen(false)}
+          >
+            ×
+          </button>
+        </div>
 
         {!submitted ? (
-          <div className="space-y-6">
-            <div>
-              <Label>What type of feedback do you have?</Label>
-              <RadioGroup
-                value={feedbackType}
-                onValueChange={setFeedbackType}
-                className="space-y-2 mt-2"
-              >
-                <div className="flex items-center">
-                  <RadioGroupItem value="feature" id="feature" />
-                  <Label htmlFor="feature" className="ml-2">Feature Request</Label>
-                </div>
-                <div className="flex items-center">
-                  <RadioGroupItem value="bug" id="bug" />
-                  <Label htmlFor="bug" className="ml-2">Bug Report</Label>
-                </div>
-                <div className="flex items-center">
-                  <RadioGroupItem value="improvement" id="improvement" />
-                  <Label htmlFor="improvement" className="ml-2">Improvement Suggestion</Label>
-                </div>
-                <div className="flex items-center">
-                  <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other" className="ml-2">Other</Label>
-                </div>
-              </RadioGroup>
+          <form onSubmit={handleSubmit} className="feedback-form">
+            <div className="form-group">
+              <label>What type of feedback do you have?</label>
+              <div className="radio-group">
+                {[
+                  ['feature', 'Feature Request'],
+                  ['bug', 'Bug Report'],
+                  ['improvement', 'Improvement Suggestion'],
+                  ['other', 'Other']
+                ].map(([value, label]) => (
+                  <label key={value} className="radio-label">
+                    <input
+                      type="radio"
+                      name="feedbackType"
+                      value={value}
+                      checked={feedbackType === value}
+                      onChange={(e) => setFeedbackType(e.target.value)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
             </div>
 
-            <div>
-              <Label>Your Feedback</Label>
-              <Textarea
-                className="mt-2"
+            <div className="form-group">
+              <label>Your Feedback</label>
+              <textarea
+                className="textarea"
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Share your thoughts..."
               />
             </div>
 
-            <DialogFooter>
-              <Button onClick={() => setIsOpen(false)} variant="outline">Cancel</Button>
-              <Button onClick={handleSubmit} disabled={!feedback.trim()}>Submit</Button>
-            </DialogFooter>
-          </div>
+            <div className="button-group">
+              <button 
+                type="button" 
+                className="button secondary"
+                onClick={() => setIsOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="button primary"
+                disabled={!feedback.trim()}
+              >
+                Submit
+              </button>
+            </div>
+          </form>
         ) : (
-          <div className="text-center py-6">
-            <p className="text-green-600">Your feedback has been submitted!</p>
-            <p className="text-sm text-gray-500 mt-2">Thanks for helping us improve.</p>
+          <div className="success-message">
+            <p>Your feedback has been submitted!</p>
+            <p>Thanks for helping us improve.</p>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
