@@ -1,3 +1,6 @@
+import UserSurvey from './components/UserSurvey';
+import FeedbackButton from './components/FeedbackButton';
+
 // Import necessary React hooks and styling
 import React, { useState, useEffect } from 'react';
 import './App.css';
@@ -30,14 +33,15 @@ function App() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
       });
+
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      const responseData = await response.json();
       
       // Data validation
       if (!responseData.success) {
@@ -98,6 +102,10 @@ function App() {
 
   return (
     <div className="app">
+
+      <UserSurvey onClose={(data) => console.log('Survey completed:', data)} />
+      <FeedbackButton />
+
       <div className="sidebar">
         <header className="header">
           <h1>Climate Change News Tracker</h1>
