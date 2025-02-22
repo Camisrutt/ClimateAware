@@ -3,175 +3,216 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 /**
- * Main Application Component
- * Manages the climate news article display and filtering functionality
+ * Content category definitions for filtering articles
  */
-function App() {
-  // State Management
-  const [articles, setArticles] = useState([]); // Stores all fetched articles
-  const [loading, setLoading] = useState(true); // Controls loading state
-  const [error, setError] = useState(null);     // Stores any error messages
-  const [selectedSource, setSelectedSource] = useState('all');     // Currently selected news source
-  const [selectedCategory, setSelectedCategory] = useState('all'); // Currently selected category
+const CONTENT_CATEGORIES = {
+  all: 'All Articles',
+  climate_primary: 'Climate Primary',
+  climate_related: 'Climate Related',
+  science_other: 'Other Science News'
+};
 
-  /**
-   * Fetches articles from the backend server
-   * Includes error handling and loading state management
-   */
+function App() {
+  // State Management with proper initialization
+  const [articles, setArticles] = useState([]); // Initialize as empty array
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedSource, setSelectedSource] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedContentCategory, setSelectedContentCategory] = useState('all');
+
   const fetchArticles = async () => {
     try {
-        setLoading(true);
-        console.log('Fetching articles...');
-        
-        // Make API request to backend
-        const response = await fetch('http://localhost:3001/api/articles', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        console.log('Response received:', response);
-        
-        // Check for HTTP errors
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('http://localhost:3001/api/articles', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         }
-        
-        const responseData = await response.json();
-        console.log('Data received:', responseData);
-        
-        // Validate response data structure
-        if (!responseData.success || !Array.isArray(responseData.data)) {
-            throw new Error(responseData.error || 'Invalid data format received');
-        }
+      });
 
-        setArticles(responseData.data);
-        setError(null);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      
+      // Data validation
+      if (!responseData.success) {
+        throw new Error(responseData.error || 'Invalid data format received');
+      }
+
+      // Ensure we're setting an array
+      const articlesData = Array.isArray(responseData.data) 
+        ? responseData.data 
+        : responseData.data.all || [];
+
+      setArticles(articlesData);
     } catch (err) {
-        setError(`Failed to load articles: ${err.message}`);
-        console.error('Error:', err);
+      setError(`Failed to load articles: ${err.message}`);
+      console.error('Error:', err);
+      setArticles([]); // Reset to empty array on error
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
-  // Fetch articles when component mounts
   useEffect(() => {
     fetchArticles();
   }, []);
 
-  // Extract unique sources and categories from articles for filters
-  const sources = ['all', ...new Set(articles.map(article => article.source))];
-  const categories = ['all', ...new Set(articles.map(article => article.category))];
+  // Safely extract unique values
+  const sources = ['all', ...new Set(Array.isArray(articles) 
+    ? articles.map(article => article.source)
+    : [])];
+  
+  const categories = ['all', ...new Set(Array.isArray(articles) 
+    ? articles.map(article => article.category)
+    : [])];
 
-  // Filter articles based on selected source and category
-  const filteredArticles = articles.filter(article => 
-    (selectedSource === 'all' || article.source === selectedSource) &&
-    (selectedCategory === 'all' || article.category === selectedCategory)
-  );
+  // Safe category counts calculation
+  const categoryCounts = {
+    climate_primary: Array.isArray(articles) 
+      ? articles.filter(a => a.contentCategory === 'climate_primary').length 
+      : 0,
+    climate_related: Array.isArray(articles) 
+      ? articles.filter(a => a.contentCategory === 'climate_related').length 
+      : 0,
+    science_other: Array.isArray(articles) 
+      ? articles.filter(a => a.contentCategory === 'science_other').length 
+      : 0
+  };
+
+  // Safe filtering with type checking
+  const filteredArticles = Array.isArray(articles) 
+    ? articles.filter(article => {
+        const sourceMatch = selectedSource === 'all' || article.source === selectedSource;
+        const categoryMatch = selectedCategory === 'all' || article.category === selectedCategory;
+        const contentCategoryMatch = selectedContentCategory === 'all' || 
+                                   article.contentCategory === selectedContentCategory;
+        return sourceMatch && categoryMatch && contentCategoryMatch;
+      })
+    : [];
 
   return (
     <div className="app">
-        {/* Sidebar with controls */}
-        <div className="sidebar">
-            <header className="header">
-                <h1>Climate Change News Tracker</h1>
-                <p>Aggregating important climate change articles from trusted sources</p>
-            </header>
+      <div className="sidebar">
+        <header className="header">
+          <h1>Climate Change News Tracker</h1>
+          <p>Aggregating important climate change articles from trusted sources</p>
+        </header>
 
-            {/* Filter Controls */}
-            <div className="controls">
-                {/* Source Selection Dropdown */}
-                <select 
-                    value={selectedSource}
-                    onChange={(e) => setSelectedSource(e.target.value)}
-                    className="select"
-                >
-                    {sources.map(source => (
-                        <option key={source} value={source}>
-                            {source.charAt(0).toUpperCase() + source.slice(1)}
-                        </option>
-                    ))}
-                </select>
+        <div className="controls">
+          <select 
+            value={selectedContentCategory}
+            onChange={(e) => setSelectedContentCategory(e.target.value)}
+            className="select"
+          >
+            {Object.entries(CONTENT_CATEGORIES).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
 
-                {/* Category Selection Dropdown */}
-                <select 
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="select"
-                >
-                    {categories.map(category => (
-                        <option key={category} value={category}>
-                            {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </option>
-                    ))}
-                </select>
+          <select 
+            value={selectedSource}
+            onChange={(e) => setSelectedSource(e.target.value)}
+            className="select"
+          >
+            {sources.map(source => (
+              <option key={source} value={source}>
+                {source.charAt(0).toUpperCase() + source.slice(1)}
+              </option>
+            ))}
+          </select>
 
-                {/* Refresh Button */}
-                <button onClick={fetchArticles} className="refresh-button">
-                    Find Info
-                </button>
-            </div>
-        </div>
+          <select 
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="select"
+          >
+            {categories.map(category => (
+              <option key={category} value={category}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </option>
+            ))}
+          </select>
 
-        {/* Main Content Area */}
-        <main className="main-content">
-            {/* Loading State Display */}
-            {loading && <div className="loading">Loading articles...</div>}
-            
-            {/* Error State Display */}
-            {error && <div className="error">{error}</div>}
-            
-            {/* No Articles Found State */}
-            {!loading && !error && filteredArticles.length === 0 && (
-                <div className="no-articles">
-                    No articles found. Try refreshing or changing filters.
+          <div className="category-counts">
+            {Object.entries(CONTENT_CATEGORIES).map(([category, label]) => {
+              if (category === 'all') return null;
+              return (
+                <div key={category} className="category-count">
+                  <span className="category-label">{label}:</span>
+                  <span className="count">{categoryCounts[category] || 0}</span>
                 </div>
-            )}
+              );
+            })}
+          </div>
 
-            {/* Articles Grid */}
-            <div className="articles-grid">
-                {filteredArticles.map((article, index) => (
-                    <article key={index} className="article-card">
-                        {/* Article Header with Category and Source */}
-                        <div className="article-header">
-                            <span className="category">{article.category}</span>
-                            <a 
-                                href={article.sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="source"
-                            >
-                                {article.source}
-                            </a>
-                        </div>
-                        
-                        {/* Article Title with Link */}
-                        <a 
-                            href={article.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="title"
-                        >
-                            {article.title}
-                        </a>
-                        
-                        {/* Article Summary */}
-                        <p className="summary">{article.summary}</p>
-                        
-                        {/* Formatted Publication Date */}
-                        <div className="date">
-                            {new Date(article.date).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            })}
-                        </div>
-                    </article>
-                ))}
-            </div>
-        </main>
+          <button onClick={fetchArticles} className="refresh-button">
+            Find Info
+          </button>
+        </div>
+      </div>
+
+      <main className="main-content">
+        {loading && <div className="loading">Loading articles...</div>}
+        
+        {error && <div className="error">{error}</div>}
+        
+        {!loading && !error && filteredArticles.length === 0 && (
+          <div className="no-articles">
+            No articles found. Try refreshing or changing filters.
+          </div>
+        )}
+
+        <div className="articles-grid">
+          {filteredArticles.map((article, index) => (
+            <article 
+              key={index} 
+              className="article-card"
+              data-category={article.contentCategory || 'science_other'}
+            >
+              <div className="article-header">
+                <span className="category">
+                  {CONTENT_CATEGORIES[article.contentCategory] || article.category}
+                </span>
+                <a 
+                  href={article.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="source"
+                >
+                  {article.source}
+                </a>
+              </div>
+              
+              <a 
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="title"
+              >
+                {article.title}
+              </a>
+              
+              <p className="summary">{article.summary}</p>
+              
+              <div className="date">
+                {new Date(article.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </div>
+            </article>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
