@@ -1,0 +1,58 @@
+/* Feedback.css */
+.feedback-button {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    z-index: 100;
+  }
+  
+  .feedback-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .feedback-modal {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    color: var(--text-primary);
+  }
+  
+  .feedback-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .feedback-form {
+    padding: 1rem;
+  }
+  
+  .success-message {
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .success-message p:first-child {
+    color: #2ecc71;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
