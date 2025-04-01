@@ -115,79 +115,107 @@ const feedMonitor = new FeedMonitor();
 const parser = new Parser({
     headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
+    },
+    timeout: 10000 // Added timeout for better handling on cloud platforms
 });
 
 // Initialize Express application
 const app = express();
 
-// Configure CORS middleware
+// Configure CORS middleware - UPDATED FOR DIGITAL OCEAN
+const allowedOrigins = [
+  'http://localhost:3000',  // Local development
+  process.env.FRONTEND_URL, // Digital Ocean App Platform frontend URL (set this in environment variables)
+  /\.ondigitalocean\.app$/, // Allow all DigitalOcean App Platform URLs
+];
+
 app.use(cors({
-    origin: 'http://localhost:3000',  // Allow requests from local development
-    methods: ['GET', 'POST'],         // Allowed HTTP methods
-    allowedHeaders: ['Content-Type'], // Allowed headers
-    credentials: true                 // Allow credentials (cookies, etc.)
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Check if origin is allowed
+        const isAllowed = allowedOrigins.some(allowedOrigin => {
+            if (allowedOrigin instanceof RegExp) {
+                return allowedOrigin.test(origin);
+            }
+            return allowedOrigin === origin;
+        });
+        
+        if (isAllowed) {
+            return callback(null, true);
+        }
+        
+        callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
 
-// Constants for content categories and keywords
-  const CONTENT_CATEGORIES = {
-    CLIMATE_PRIMARY: 'climate_primary',      // Directly about climate change
-    CLIMATE_RELATED: 'climate_related',      // Environmental/weather/related topics
-    SCIENCE_OTHER: 'science_other',          // Other science news
-    UNCATEGORIZED: 'uncategorized'
-  };
-  
-  //Filter Functionality & Classification and Duplicate
-  function classifyArticle(article) {
-    const contentToCheck = `${article.title} ${article.summary}`.toLowerCase();
-    
-    // Check for primary climate keywords
-    if (CLIMATE_KEYWORDS.primary.some(keyword => contentToCheck.includes(keyword))) {
-      return CONTENT_CATEGORIES.CLIMATE_PRIMARY;
-    }
-    
-    // Check for related topics
-    if (CLIMATE_KEYWORDS.related.some(keyword => contentToCheck.includes(keyword))) {
-      return CONTENT_CATEGORIES.CLIMATE_RELATED;
-    }
-    
-    // If from specific climate-focused sources, mark as related
-    if (['IPCC', 'UN_Climate'].includes(article.source)) {
-      return CONTENT_CATEGORIES.CLIMATE_RELATED;
-    }
-    
-    return CONTENT_CATEGORIES.SCIENCE_OTHER;
-  }
-  function isDuplicate(article, existingArticles) {
-    return existingArticles.some(existing => {
-      // Check for title similarity
-      const titleSimilarity = stringSimilarity(article.title, existing.title);
-      
-      // Check for close publication dates (within 24 hours)
-      const dateClose = Math.abs(new Date(article.date) - new Date(existing.date)) < 86400000;
-      
-      return titleSimilarity > 0.8 && dateClose;
-    });
-  }
+// Add JSON body parser
+app.use(express.json());
 
-  function stringSimilarity(str1, str2) {
-    const s1 = str1.toLowerCase();
-    const s2 = str2.toLowerCase();
-    return s1 === s2 ? 1 : 0;  // Simple exact match for now
+// Constants for content categories and keywords
+const CONTENT_CATEGORIES = {
+  CLIMATE_PRIMARY: 'climate_primary',      // Directly about climate change
+  CLIMATE_RELATED: 'climate_related',      // Environmental/weather/related topics
+  SCIENCE_OTHER: 'science_other',          // Other science news
+  UNCATEGORIZED: 'uncategorized'
+};
+
+//Filter Functionality & Classification and Duplicate
+function classifyArticle(article) {
+  const contentToCheck = `${article.title} ${article.summary}`.toLowerCase();
+  
+  // Check for primary climate keywords
+  if (CLIMATE_KEYWORDS.primary.some(keyword => contentToCheck.includes(keyword))) {
+    return CONTENT_CATEGORIES.CLIMATE_PRIMARY;
+  }
+  
+  // Check for related topics
+  if (CLIMATE_KEYWORDS.related.some(keyword => contentToCheck.includes(keyword))) {
+    return CONTENT_CATEGORIES.CLIMATE_RELATED;
+  }
+  
+  // If from specific climate-focused sources, mark as related
+  if (['IPCC', 'UN_Climate'].includes(article.source)) {
+    return CONTENT_CATEGORIES.CLIMATE_RELATED;
+  }
+  
+  return CONTENT_CATEGORIES.SCIENCE_OTHER;
 }
 
-  const CLIMATE_KEYWORDS = {
-    primary: [
-      'climate change', 'global warming', 'greenhouse gas', 'carbon emissions',
-      'sea level rise', 'climate crisis', 'climate action', 'paris agreement',
-      'carbon footprint', 'climate science'
-    ],
-    related: [
-      'weather pattern', 'extreme weather', 'drought', 'flood', 'wildfire',
-      'hurricane', 'environmental', 'renewable energy', 'sustainability',
-      'biodiversity', 'ecosystem', 'conservation'
-    ]
-  };
+function isDuplicate(article, existingArticles) {
+  return existingArticles.some(existing => {
+    // Check for title similarity
+    const titleSimilarity = stringSimilarity(article.title, existing.title);
+    
+    // Check for close publication dates (within 24 hours)
+    const dateClose = Math.abs(new Date(article.date) - new Date(existing.date)) < 86400000;
+    
+    return titleSimilarity > 0.8 && dateClose;
+  });
+}
+
+function stringSimilarity(str1, str2) {
+  const s1 = str1.toLowerCase();
+  const s2 = str2.toLowerCase();
+  return s1 === s2 ? 1 : 0;  // Simple exact match for now
+}
+
+const CLIMATE_KEYWORDS = {
+  primary: [
+    'climate change', 'global warming', 'greenhouse gas', 'carbon emissions',
+    'sea level rise', 'climate crisis', 'climate action', 'paris agreement',
+    'carbon footprint', 'climate science'
+  ],
+  related: [
+    'weather pattern', 'extreme weather', 'drought', 'flood', 'wildfire',
+    'hurricane', 'environmental', 'renewable energy', 'sustainability',
+    'biodiversity', 'ecosystem', 'conservation'
+  ]
+};
 
 // Define our news feed sources
 const NEWS_FEEDS = {
@@ -224,18 +252,12 @@ const NEWS_FEEDS = {
         ],
         categories: ['Global Policy', 'International Action', 'Climate Agreements']
     },
-    
-    // Weather Services  
-    //AccuWeather 
-    //IPCC
-    
     BBC_Climate: {
         urls: [
             'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml'  // Science & Environment  
         ],
         categories: ['Climate News', 'Environmental Reports', 'Science Coverage']
     },
-    
     // Added: Community and Grassroots Sources
     Community_Climate: {
         urls: [
@@ -245,26 +267,14 @@ const NEWS_FEEDS = {
         ],
         categories: ['Community Action', 'Climate Justice', 'Local Initiatives']
     },
-    
     // Added: Indigenous Knowledge Sources
     Indigenous_Climate: {
         urls: [
             // Indigenous Climate Action
             'https://indianz.com/rss/news.xml'
-           //'https://www.indigenousclimateknowledge.org/feed'
         ],
         categories: ['Traditional Knowledge', 'Indigenous Perspectives', 'Land Management']
-    },
-    
-    // Added: Local Impact Sources
-  //  Local_Climate_Impact: {
-  //      urls: [
-  //          'https://www.localclimateimpacts.org/feed',
-   //         'https://climatechangeresponses.org/feed',
-   //         'https://www.climatereporting.org/local/feed'
-  //      ],
-  //      categories: ['Local Impacts', 'Community Response', 'Regional Analysis']
-  //  }
+    }
 };
 
 /**
@@ -368,6 +378,15 @@ async function fetchArticles() {
   }
 }
 
+// New health check endpoint for DigitalOcean App Platform
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Climate Feed API is running',
+    version: process.env.npm_package_version || '1.0.0'
+  });
+});
+
 // API Routes
 
 // Get all articles with health metrics
@@ -391,41 +410,90 @@ app.get('/api/articles', async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Error in /api/articles:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to fetch articles',
-            details: error.message
+            details: error.message || 'Unknown error'
         });
     }
 });
 
 // Get health metrics for all feeds
 app.get('/api/feed-health', (req, res) => {
-    const health = feedMonitor.getAllFeedsHealth();
-    res.json({
-        success: true,
-        data: health,
-        timestamp: new Date().toISOString()
-    });
+    try {
+        const health = feedMonitor.getAllFeedsHealth();
+        res.json({
+            success: true,
+            data: health,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error in /api/feed-health:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get feed health',
+            details: error.message || 'Unknown error'
+        });
+    }
 });
 
 // Get list of unhealthy feeds
 app.get('/api/unhealthy-feeds', (req, res) => {
-    const unhealthyFeeds = feedMonitor.getUnhealthyFeeds();
-    res.json({
-        success: true,
-        data: unhealthyFeeds,
-        timestamp: new Date().toISOString()
-    });
+    try {
+        const unhealthyFeeds = feedMonitor.getUnhealthyFeeds();
+        res.json({
+            success: true,
+            data: unhealthyFeeds,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error in /api/unhealthy-feeds:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get unhealthy feeds',
+            details: error.message || 'Unknown error'
+        });
+    }
 });
 
-// Test route to verify server is running
+// Test route to verify server is running - also useful for health checks
 app.get('/test', (req, res) => {
     res.json({ message: 'Backend server is running!' });
 });
 
+// Error handler middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({
+        success: false,
+        error: 'Server error',
+        message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+    });
+});
+
+// Handle 404s
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'Not found',
+        message: `Route ${req.path} not found`
+    });
+});
+
 // Start the server
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
+});
+
+// Handle process termination gracefully
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    process.exit(0);
 });
