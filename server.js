@@ -3,6 +3,17 @@ const express = require('express');  // Web server framework
 const cors = require('cors');        // Cross-Origin Resource Sharing middleware
 const Parser = require('rss-parser'); // RSS feed parser
 
+require('dotenv').config();
+const db = require('./db'); // Use the db.js file from the second artifact
+
+// Test database connection on startup
+(async function() {
+  const connected = await db.testConnection();
+  if (!connected) {
+    console.error("Could not connect to database. Check your credentials.");
+    // Decide whether to exit or continue without DB
+  }
+})();
 /**
  * FeedMonitor Class
  * Tracks the health and performance of RSS feeds
@@ -291,14 +302,24 @@ async function fetchFeedWithRetry(url, maxRetries = 2) {
         try {
             const feed = await parser.parseURL(url);
             const responseTime = Date.now() - startTime;
+            
+            // Update local monitor
             feedMonitor.recordAttempt(url, true, responseTime, feed.items ? feed.items.length : 0);
+            
+            // Update database 
+            await db.recordFeedAttempt(url, true, responseTime, feed.items ? feed.items.length : 0);
+            
             return feed;
         } catch (error) {
             lastError = error;
             const responseTime = Date.now() - startTime;
+            
+            // Update local monitor
             feedMonitor.recordAttempt(url, false, responseTime, 0, error);
             
-            // Wait longer between each retry attempt
+            // Update database
+            await db.recordFeedAttempt(url, false, responseTime, 0, error);
+            
             if (attempt < maxRetries - 1) {
                 await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
             }
@@ -352,6 +373,11 @@ async function fetchArticles() {
                   console.error(`Error fetching from ${source} - ${feedUrl}:`, error);
               }
           }
+          // Add at the end of your fetchArticles function
+// After processing articles
+for (const article of allArticles) {
+    await db.insertArticle(article);
+}
       }
 
       // Sort articles by date (newest first)
@@ -392,19 +418,26 @@ app.get('/', (req, res) => {
 // Get all articles with health metrics
 app.get('/api/articles', async (req, res) => {
     try {
-        const articles = await fetchArticles();
-        const healthMetrics = feedMonitor.getAllFeedsHealth();
+        // Get filters from query parameters
+        const filters = {
+            contentCategory: req.query.category,
+            source: req.query.source,
+            startDate: req.query.startDate,
+            endDate: req.query.endDate,
+            limit: req.query.limit || 100
+        };
+        
+        // Get articles from database
+        const articles = await db.getArticles(filters);
+        const healthMetrics = await db.getAllFeedsHealth();
+        const counts = await db.getArticleCountsByCategory();
         
         res.json({
             success: true,
-            data: articles.all, // Send all articles for now
+            data: articles,
             metadata: {
-                totalArticles: articles.all.length,
-                articlesByCategory: {
-                    climate_primary: articles.climate_primary.length,
-                    climate_related: articles.climate_related.length,
-                    science_other: articles.science_other.length
-                },
+                totalArticles: articles.length,
+                articlesByCategory: counts,
                 fetchTime: new Date().toISOString(),
                 feedHealth: healthMetrics
             }
