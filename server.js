@@ -497,44 +497,6 @@ app.get('/test', (req, res) => {
     res.json({ message: 'Backend server is running!' });
 });
 
-// Error handler middleware
-app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    res.status(500).json({
-        success: false,
-        error: 'Server error',
-        message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
-    });
-});
-
-// Handle 404s
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        error: 'Not found',
-        message: `Route ${req.path} not found`
-    });
-});
-
-// Start the server
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
-});
-
-// Handle process termination gracefully
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
-    process.exit(0);
-});
-
-process.on('SIGINT', () => {
-    console.log('SIGINT received, shutting down gracefully');
-    process.exit(0);
-});
-
-app.use(express.json());
-
 // Submit user survey
 app.post('/api/survey', async (req, res) => {
   try {
@@ -611,6 +573,51 @@ app.post('/api/feedback', async (req, res) => {
   }
 });
 
+// Error handler middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({
+        success: false,
+        error: 'Server error',
+        message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+    });
+});
+
+// Handle 404s
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'Not found',
+        message: `Route ${req.path} not found`
+    });
+});
+
+console.log('Registered Routes:');
+app._router.stack.forEach(r => {
+  if (r.route && r.route.path) {
+    console.log(`${Object.keys(r.route.methods).join(',')} ${r.route.path}`);
+  }
+});
+
+// Start the server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
+});
+
+// Handle process termination gracefully
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    process.exit(0);
+});
+
+
+
 // Get survey statistics (admin or analytics endpoint)
 app.get('/api/survey-stats', async (req, res) => {
   try {
@@ -685,3 +692,27 @@ app.get('/api/feedback-stats', async (req, res) => {
     });
   }
 });
+
+// Telling Server to fetch articles!!!
+
+// Fetch articles on startup and every 3 hours
+(async function() {
+  try {
+    console.log('Initial article fetch on startup...');
+    await fetchArticles();
+    console.log('Initial article fetch completed.');
+  } catch (error) {
+    console.error('Error during initial article fetch:', error);
+  }
+  
+  // Schedule periodic fetching
+  setInterval(async () => {
+    try {
+      console.log('Scheduled article fetch starting...');
+      await fetchArticles();
+      console.log('Scheduled article fetch completed.');
+    } catch (error) {
+      console.error('Error during scheduled article fetch:', error);
+    }
+  }, 6 * 60 * 60 * 1000); // 6 hours in milliseconds
+})();
