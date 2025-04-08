@@ -1,40 +1,48 @@
 import React, { useState } from 'react';
+import { submitFeedback } from '../api'; // Import from api.js
 import './Feedback.css';
 
 const FeedbackButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState('feature');
   const [feedback, setFeedback] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Save feedback
-    const feedbackData = {
-      type: feedbackType,
-      message: feedback,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Get existing feedback
-    const existingFeedback = JSON.parse(localStorage.getItem('userFeedback') || '[]');
-    localStorage.setItem('userFeedback', JSON.stringify([...existingFeedback, feedbackData]));
-
-    // Show success state
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setSubmitError(null);
     
-    // Reset form after 2 seconds
-    setTimeout(() => {
-      setIsOpen(false);
-      setFeedback('');
-      setFeedbackType('feature');
-      setSubmitted(false);
-    }, 2000);
+    try {
+      // Submit to backend API
+      await submitFeedback({
+        type: feedbackType,
+        message: feedback
+      });
+      
+      // Show success state
+      setSubmitted(true);
+      
+      // Reset form after 2 seconds
+      setTimeout(() => {
+        setIsOpen(false);
+        setFeedback('');
+        setFeedbackType('feature');
+        setSubmitted(false);
+      }, 2000);
+    } catch (error) {
+      setSubmitError('Failed to submit feedback. Please try again.');
+      console.error('Feedback submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) {
     return (
-      <button 
+      <button
         className="feedback-button"
         onClick={() => setIsOpen(true)}
       >
@@ -48,14 +56,16 @@ const FeedbackButton = () => {
       <div className="feedback-modal">
         <div className="feedback-header">
           <h2>{submitted ? 'Thank You!' : 'Share Your Feedback'}</h2>
-          <button 
+          <button
             className="close-button"
             onClick={() => setIsOpen(false)}
           >
             ×
           </button>
         </div>
-
+        
+        {submitError && <div className="error-message">{submitError}</div>}
+        
         {!submitted ? (
           <form onSubmit={handleSubmit} className="feedback-form">
             <div className="form-group">
@@ -80,7 +90,6 @@ const FeedbackButton = () => {
                 ))}
               </div>
             </div>
-
             <div className="form-group">
               <label>Your Feedback</label>
               <textarea
@@ -88,23 +97,23 @@ const FeedbackButton = () => {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Share your thoughts..."
+                required
               />
             </div>
-
             <div className="button-group">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="button secondary"
                 onClick={() => setIsOpen(false)}
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="button primary"
-                disabled={!feedback.trim()}
+                disabled={isSubmitting || !feedback.trim()}
               >
-                Submit
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             </div>
           </form>

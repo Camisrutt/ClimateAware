@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { submitSurvey } from '../api'; // Import from api.js
 import './Survey.css';
 
 const UserSurvey = ({ onClose }) => {
   const [showSurvey, setShowSurvey] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [formData, setFormData] = useState({
     background: '',
     otherBackground: '',
@@ -20,22 +23,31 @@ const UserSurvey = ({ onClose }) => {
     }
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Save survey data
-    const surveyData = {
-      ...formData,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Get existing responses
-    const existingResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
-    localStorage.setItem('surveyResponses', JSON.stringify([...existingResponses, surveyData]));
-    localStorage.setItem('surveyCompleted', 'true');
-
-    // Close survey
-    setShowSurvey(false);
-    if (onClose) onClose(surveyData);
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      // Submit to backend API
+      const result = await submitSurvey({
+        ...formData,
+        // Don't include otherBackground if background is not 'other'
+        otherBackground: formData.background === 'other' ? formData.otherBackground : undefined
+      });
+      
+      // Mark as completed in localStorage to prevent showing again
+      localStorage.setItem('surveyCompleted', 'true');
+      
+      // Close survey
+      setShowSurvey(false);
+      if (onClose) onClose(formData);
+    } catch (error) {
+      setSubmitError('Failed to submit survey. Please try again.');
+      console.error('Survey submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!showSurvey) return null;
@@ -54,6 +66,8 @@ const UserSurvey = ({ onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="survey-form">
+          {submitError && <div className="error-message">{submitError}</div>}
+          
           <div className="form-group">
             <label>What best describes your background?</label>
             <div className="radio-group">
@@ -65,6 +79,7 @@ const UserSurvey = ({ onClose }) => {
                     value={option.toLowerCase().replace(' ', '-')}
                     checked={formData.background === option.toLowerCase().replace(' ', '-')}
                     onChange={(e) => setFormData({ ...formData, background: e.target.value })}
+                    required
                   />
                   {option}
                 </label>
@@ -78,6 +93,7 @@ const UserSurvey = ({ onClose }) => {
                 placeholder="Please specify"
                 value={formData.otherBackground}
                 onChange={(e) => setFormData({ ...formData, otherBackground: e.target.value })}
+                required={formData.background === 'other'}
               />
             )}
           </div>
@@ -102,6 +118,7 @@ const UserSurvey = ({ onClose }) => {
                     value={option.toLowerCase().replace(' ', '-')}
                     checked={formData.affiliation === option.toLowerCase().replace(' ', '-')}
                     onChange={(e) => setFormData({ ...formData, affiliation: e.target.value })}
+                    required
                   />
                   {option}
                 </label>
@@ -117,8 +134,12 @@ const UserSurvey = ({ onClose }) => {
             >
               Skip
             </button>
-            <button type="submit" className="button primary">
-              Submit
+            <button 
+              type="submit" 
+              className="button primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
           </div>
         </form>

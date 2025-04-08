@@ -530,3 +530,156 @@ process.on('SIGINT', () => {
     console.log('SIGINT received, shutting down gracefully');
     process.exit(0);
 });
+
+app.use(express.json());
+
+// Submit user survey
+app.post('/api/survey', async (req, res) => {
+  try {
+    const { background, otherBackground, interest, affiliation } = req.body;
+    
+    // Basic validation
+    if (!background) {
+      return res.status(400).json({
+        success: false,
+        error: 'Background is required'
+      });
+    }
+    
+    // Get IP and user agent for analytics
+    const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const user_agent = req.headers['user-agent'];
+    
+    // Insert into database
+    const [result] = await pool.execute(
+      'INSERT INTO user_surveys (background, other_background, interest, affiliation, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+      [background, otherBackground || null, interest, affiliation, ip_address, user_agent]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Survey submitted successfully',
+      id: result.insertId
+    });
+  } catch (error) {
+    console.error('Error submitting survey:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit survey',
+      details: process.env.NODE_ENV === 'production' ? 'Server error' : error.message
+    });
+  }
+});
+
+// Submit user feedback
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { type, message } = req.body;
+    
+    // Basic validation
+    if (!message || !message.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Feedback message is required'
+      });
+    }
+    
+    // Get IP and user agent for analytics
+    const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const user_agent = req.headers['user-agent'];
+    
+    // Insert into database
+    const [result] = await pool.execute(
+      'INSERT INTO user_feedback (feedback_type, message, ip_address, user_agent) VALUES (?, ?, ?, ?)',
+      [type, message, ip_address, user_agent]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Feedback submitted successfully',
+      id: result.insertId
+    });
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit feedback',
+      details: process.env.NODE_ENV === 'production' ? 'Server error' : error.message
+    });
+  }
+});
+
+// Get survey statistics (admin or analytics endpoint)
+app.get('/api/survey-stats', async (req, res) => {
+  try {
+    // Check for some kind of authentication here
+    // This is just an example - implement proper auth
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey !== process.env.ADMIN_API_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized'
+      });
+    }
+    
+    const [backgroundStats] = await pool.execute(
+      'SELECT background, COUNT(*) as count FROM user_surveys GROUP BY background ORDER BY count DESC'
+    );
+    
+    const [affiliationStats] = await pool.execute(
+      'SELECT affiliation, COUNT(*) as count FROM user_surveys GROUP BY affiliation ORDER BY count DESC'
+    );
+    
+    res.json({
+      success: true,
+      data: {
+        backgroundStats,
+        affiliationStats,
+        totalResponses: backgroundStats.reduce((acc, stat) => acc + stat.count, 0)
+      }
+    });
+  } catch (error) {
+    console.error('Error getting survey stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get survey statistics'
+    });
+  }
+});
+
+// Get feedback statistics (admin or analytics endpoint)
+app.get('/api/feedback-stats', async (req, res) => {
+  try {
+    // Check for some kind of authentication here
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey !== process.env.ADMIN_API_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized'
+      });
+    }
+    
+    const [typeStats] = await pool.execute(
+      'SELECT feedback_type, COUNT(*) as count FROM user_feedback GROUP BY feedback_type ORDER BY count DESC'
+    );
+    
+    const [recentFeedback] = await pool.execute(
+      'SELECT * FROM user_feedback ORDER BY created_at DESC LIMIT 50'
+    );
+    
+    res.json({
+      success: true,
+      data: {
+        typeStats,
+        recentFeedback,
+        totalFeedback: typeStats.reduce((acc, stat) => acc + stat.count, 0)
+      }
+    });
+  } catch (error) {
+    console.error('Error getting feedback stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get feedback statistics'
+    });
+  }
+});

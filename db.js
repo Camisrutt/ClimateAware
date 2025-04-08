@@ -6,10 +6,11 @@ const dbConfig = {
   host: 'db-mysql-camisrutt-main-do-user-18546521-0.l.db.ondigitalocean.com',
   port: 25060,
   user: 'doadmin',
-  password: process.env.DB_PASSWORD, // Set this in your environment variables
+  password: process.env.DB_PASSWORD,
   database: 'climate_feed_monitor',
   ssl: {
-    required: true
+    required: true,
+    rejectUnauthorized: false  // Add this line to accept self-signed certificates
   }
 };
 

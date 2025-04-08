@@ -1,9 +1,8 @@
-import UserSurvey from './components/UserSurvey';
-import FeedbackButton from './components/FeedbackButton';
-
-// Import necessary React hooks and styling
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import UserSurvey from './components/UserSurvey';
+import FeedbackButton from './components/FeedbackButton';
+import { fetchArticles } from './api'; // Import the API function
 
 /**
  * Content category definitions for filtering articles
@@ -23,25 +22,25 @@ function App() {
   const [selectedSource, setSelectedSource] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedContentCategory, setSelectedContentCategory] = useState('all');
+  const [categoryCounts, setCategoryCounts] = useState({
+    climate_primary: 0,
+    climate_related: 0,
+    science_other: 0
+  });
 
-  const fetchArticles = async () => {
+  const getArticles = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3001/api/articles', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const responseData = await response.json();
-      console.log('Response data:', responseData);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // Use the filters from state
+      const filters = {
+        source: selectedSource,
+        category: selectedCategory,
+        contentCategory: selectedContentCategory
+      };
+      
+      const responseData = await fetchArticles(filters);
       
       // Data validation
       if (!responseData.success) {
@@ -54,6 +53,18 @@ function App() {
         : responseData.data.all || [];
 
       setArticles(articlesData);
+      
+      // Set category counts from the metadata if available
+      if (responseData.metadata && responseData.metadata.articlesByCategory) {
+        setCategoryCounts(responseData.metadata.articlesByCategory);
+      } else {
+        // Calculate counts locally if not provided by API
+        setCategoryCounts({
+          climate_primary: articlesData.filter(a => a.contentCategory === 'climate_primary').length,
+          climate_related: articlesData.filter(a => a.contentCategory === 'climate_related').length,
+          science_other: articlesData.filter(a => a.contentCategory === 'science_other').length
+        });
+      }
     } catch (err) {
       setError(`Failed to load articles: ${err.message}`);
       console.error('Error:', err);
@@ -64,8 +75,8 @@ function App() {
   };
 
   useEffect(() => {
-    fetchArticles();
-  }, []);
+    getArticles();
+  }, []); // Empty dependency array means this runs once on component mount
 
   // Safely extract unique values
   const sources = ['all', ...new Set(Array.isArray(articles) 
@@ -75,19 +86,6 @@ function App() {
   const categories = ['all', ...new Set(Array.isArray(articles) 
     ? articles.map(article => article.category)
     : [])];
-
-  // Safe category counts calculation
-  const categoryCounts = {
-    climate_primary: Array.isArray(articles) 
-      ? articles.filter(a => a.contentCategory === 'climate_primary').length 
-      : 0,
-    climate_related: Array.isArray(articles) 
-      ? articles.filter(a => a.contentCategory === 'climate_related').length 
-      : 0,
-    science_other: Array.isArray(articles) 
-      ? articles.filter(a => a.contentCategory === 'science_other').length 
-      : 0
-  };
 
   // Safe filtering with type checking
   const filteredArticles = Array.isArray(articles) 
@@ -102,7 +100,6 @@ function App() {
 
   return (
     <div className="app">
-
       <UserSurvey onClose={(data) => console.log('Survey completed:', data)} />
       <FeedbackButton />
 
@@ -161,7 +158,7 @@ function App() {
             })}
           </div>
 
-          <button onClick={fetchArticles} className="refresh-button">
+          <button onClick={getArticles} className="refresh-button">
             Find Info
           </button>
         </div>
