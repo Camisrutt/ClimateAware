@@ -136,11 +136,13 @@ const app = express();
 // Configure CORS middleware - UPDATED FOR DIGITAL OCEAN
 const allowedOrigins = [
   'http://localhost:3000',  // Local development
+  'https://ccarticle.org',   // Production frontend URL || Main frontend URL
   process.env.FRONTEND_URL, // Digital Ocean App Platform frontend URL (set this in environment variables)
   /\.ondigitalocean\.app$/, // Allow all DigitalOcean App Platform URLs
 ];
 
 app.use(cors({
+    // origin: '*',
     origin: function(origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);

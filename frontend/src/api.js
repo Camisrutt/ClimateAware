@@ -1,4 +1,4 @@
-const API_URL = process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app';
+const API_URL = (process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app').replace(/\/$/, '');
 
 // Fetch articles with optional filters
 export const fetchArticles = async (filters = {}) => {
