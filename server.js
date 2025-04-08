@@ -422,7 +422,7 @@ app.get('/api/articles', async (req, res) => {
     try {
         // Get filters from query parameters
         const filters = {
-            contentCategory: req.query.category,
+            contentCategory: req.query.contentCategory,
             source: req.query.source,
             startDate: req.query.startDate,
             endDate: req.query.endDate,
@@ -573,51 +573,7 @@ app.post('/api/feedback', async (req, res) => {
   }
 });
 
-// Error handler middleware
-app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    res.status(500).json({
-        success: false,
-        error: 'Server error',
-        message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
-    });
-});
-
-// Handle 404s
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        error: 'Not found',
-        message: `Route ${req.path} not found`
-    });
-});
-
-console.log('Registered Routes:');
-app._router.stack.forEach(r => {
-  if (r.route && r.route.path) {
-    console.log(`${Object.keys(r.route.methods).join(',')} ${r.route.path}`);
-  }
-});
-
-// Start the server
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
-});
-
-// Handle process termination gracefully
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
-    process.exit(0);
-});
-
-process.on('SIGINT', () => {
-    console.log('SIGINT received, shutting down gracefully');
-    process.exit(0);
-});
-
-
-
+// REQUIRE ADMIN ACCESS ????!!!! UNUSED FOR MOMENT
 // Get survey statistics (admin or analytics endpoint)
 app.get('/api/survey-stats', async (req, res) => {
   try {
@@ -692,6 +648,50 @@ app.get('/api/feedback-stats', async (req, res) => {
     });
   }
 });
+
+// Error handler middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({
+        success: false,
+        error: 'Server error',
+        message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+    });
+});
+
+// Handle 404s
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'Not found',
+        message: `Route ${req.path} not found`
+    });
+});
+
+console.log('Registered Routes:');
+app._router.stack.forEach(r => {
+  if (r.route && r.route.path) {
+    console.log(`${Object.keys(r.route.methods).join(',')} ${r.route.path}`);
+  }
+});
+
+// Start the server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
+});
+
+// Handle process termination gracefully
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    process.exit(0);
+});
+
 
 // Telling Server to fetch articles!!!
 

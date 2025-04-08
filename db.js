@@ -148,8 +148,11 @@ async function getArticles(filters = {}) {
     
     const queryParams = [];
     
+    // Debug incoming filters
+    console.log('Article filters:', JSON.stringify(filters));
+
     // Add filters if provided
-    if (filters.contentCategory) {
+    if (filters.contentCategory && filters.contentCategory !== 'all') {
       query += ` AND content_category = ?`;
       queryParams.push(filters.contentCategory);
     }
@@ -178,7 +181,11 @@ async function getArticles(filters = {}) {
       queryParams.push(parseInt(filters.limit));
     }
     
+    console.log('SQL Query:', query);
+    console.log('Query Params:', queryParams);
+    
     const [rows] = await pool.execute(query, queryParams);
+    console.log(`Found ${rows.length} articles`);
     return rows;
   } catch (err) {
     console.error('Error getting articles:', err);
@@ -253,10 +260,24 @@ async function fetchAndStoreArticles() {
   }
 }
 
+async function submitSurvey(data) {
+  try {
+    const [result] = await pool.execute(
+      'INSERT INTO user_surveys (background, other_background, interest, affiliation, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+      [data.background, data.otherBackground || null, data.interest, data.affiliation, data.ip_address, data.user_agent]
+    );
+    return { success: true, id: result.insertId };
+  } catch (err) {
+    console.error('Error submitting survey:', err);
+    throw err;
+  }
+}
+
 module.exports = {
   testConnection,
   recordFeedAttempt,
   insertArticle,
+  submitSurvey,
   getAllFeedsHealth,
   getUnhealthyFeeds,
   getArticles,
