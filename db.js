@@ -260,11 +260,12 @@ async function fetchAndStoreArticles() {
   }
 }
 
+// Submit survey
 async function submitSurvey(data) {
   try {
     const [result] = await pool.execute(
       'INSERT INTO user_surveys (background, other_background, interest, affiliation, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
-      [data.background, data.otherBackground || null, data.interest, data.affiliation, data.ip_address, data.user_agent]
+      [data.background, data.otherBackground, data.interest, data.affiliation, data.ip_address, data.user_agent]
     );
     return { success: true, id: result.insertId };
   } catch (err) {
@@ -273,14 +274,76 @@ async function submitSurvey(data) {
   }
 }
 
+// Submit feedback
+async function submitFeedback(data) {
+  try {
+    const [result] = await pool.execute(
+      'INSERT INTO user_feedback (feedback_type, message, ip_address, user_agent) VALUES (?, ?, ?, ?)',
+      [data.type, data.message, data.ip_address, data.user_agent]
+    );
+    return { success: true, id: result.insertId };
+  } catch (err) {
+    console.error('Error submitting feedback:', err);
+    throw err;
+  }
+}
+
+// Get survey statistics
+async function getSurveyStats() {
+  try {
+    const [backgroundStats] = await pool.execute(
+      'SELECT background, COUNT(*) as count FROM user_surveys GROUP BY background ORDER BY count DESC'
+    );
+    
+    const [affiliationStats] = await pool.execute(
+      'SELECT affiliation, COUNT(*) as count FROM user_surveys GROUP BY affiliation ORDER BY count DESC'
+    );
+    
+    return {
+      backgroundStats,
+      affiliationStats,
+      totalResponses: backgroundStats.reduce((acc, stat) => acc + stat.count, 0)
+    };
+  } catch (err) {
+    console.error('Error getting survey stats:', err);
+    throw err;
+  }
+}
+
+// Get feedback statistics
+async function getFeedbackStats() {
+  try {
+    const [typeStats] = await pool.execute(
+      'SELECT feedback_type, COUNT(*) as count FROM user_feedback GROUP BY feedback_type ORDER BY count DESC'
+    );
+    
+    const [recentFeedback] = await pool.execute(
+      'SELECT * FROM user_feedback ORDER BY created_at DESC LIMIT 50'
+    );
+    
+    return {
+      typeStats,
+      recentFeedback,
+      totalFeedback: typeStats.reduce((acc, stat) => acc + stat.count, 0)
+    };
+  } catch (err) {
+    console.error('Error getting feedback stats:', err);
+    throw err;
+  }
+}
+
+// Update module exports
 module.exports = {
   testConnection,
   recordFeedAttempt,
   insertArticle,
-  submitSurvey,
   getAllFeedsHealth,
   getUnhealthyFeeds,
   getArticles,
   getArticleCountsByCategory,
-  fetchAndStoreArticles
+  fetchAndStoreArticles,
+  submitSurvey,           // New export
+  submitFeedback,         // New export 
+  getSurveyStats,         // New export
+  getFeedbackStats        // New export
 };

@@ -36,7 +36,7 @@ function App() {
       // Use the filters from state
       const filters = {
         source: selectedSource,
-        category: selectedCategory,
+      //  category: selectedCategory, (Removed per requested change)
         contentCategory: selectedContentCategory
       };
       

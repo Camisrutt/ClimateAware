@@ -498,6 +498,7 @@ app.get('/test', (req, res) => {
 });
 
 // Submit user survey
+// Replace these survey/feedback endpoints in server.js
 app.post('/api/survey', async (req, res) => {
   try {
     const { background, otherBackground, interest, affiliation } = req.body;
@@ -514,16 +515,20 @@ app.post('/api/survey', async (req, res) => {
     const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const user_agent = req.headers['user-agent'];
     
-    // Insert into database
-    const [result] = await pool.execute(
-      'INSERT INTO user_surveys (background, other_background, interest, affiliation, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
-      [background, otherBackground || null, interest, affiliation, ip_address, user_agent]
-    );
+    // Use db module to insert
+    const result = await db.submitSurvey({
+      background,
+      otherBackground: otherBackground || null,
+      interest,
+      affiliation,
+      ip_address,
+      user_agent
+    });
     
     res.json({
       success: true,
       message: 'Survey submitted successfully',
-      id: result.insertId
+      id: result.id
     });
   } catch (error) {
     console.error('Error submitting survey:', error);
@@ -552,25 +557,81 @@ app.post('/api/feedback', async (req, res) => {
     const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const user_agent = req.headers['user-agent'];
     
-    // Insert into database
-    const [result] = await pool.execute(
-      'INSERT INTO user_feedback (feedback_type, message, ip_address, user_agent) VALUES (?, ?, ?, ?)',
-      [type, message, ip_address, user_agent]
-    );
-    
-    res.json({
-      success: true,
-      message: 'Feedback submitted successfully',
-      id: result.insertId
-    });
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to submit feedback',
-      details: process.env.NODE_ENV === 'production' ? 'Server error' : error.message
-    });
-  }
+// Use db module to insert
+const result = await db.submitFeedback({
+  type,
+  message,
+  ip_address,
+  user_agent
+});
+
+res.json({
+  success: true,
+  message: 'Feedback submitted successfully',
+  id: result.id
+});
+} catch (error) {
+console.error('Error submitting feedback:', error);
+res.status(500).json({
+  success: false,
+  error: 'Failed to submit feedback',
+  details: process.env.NODE_ENV === 'production' ? 'Server error' : error.message
+});
+}
+});
+
+// Get survey statistics - FIXED VERSION
+app.get('/api/survey-stats', async (req, res) => {
+try {
+// Check for authentication
+const apiKey = req.headers['x-api-key'];
+if (apiKey !== process.env.ADMIN_API_KEY) {
+  return res.status(401).json({
+    success: false,
+    error: 'Unauthorized'
+  });
+}
+
+const stats = await db.getSurveyStats();
+
+res.json({
+  success: true,
+  data: stats
+});
+} catch (error) {
+console.error('Error getting survey stats:', error);
+res.status(500).json({
+  success: false,
+  error: 'Failed to get survey statistics'
+});
+}
+});
+
+// Get feedback statistics - FIXED VERSION
+app.get('/api/feedback-stats', async (req, res) => {
+try {
+// Check for authentication
+const apiKey = req.headers['x-api-key'];
+if (apiKey !== process.env.ADMIN_API_KEY) {
+  return res.status(401).json({
+    success: false,
+    error: 'Unauthorized'
+  });
+}
+
+const stats = await db.getFeedbackStats();
+
+res.json({
+  success: true,
+  data: stats
+});
+} catch (error) {
+console.error('Error getting feedback stats:', error);
+res.status(500).json({
+  success: false,
+  error: 'Failed to get feedback statistics'
+});
+}
 });
 
 // REQUIRE ADMIN ACCESS ????!!!! UNUSED FOR MOMENT
