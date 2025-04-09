@@ -141,6 +141,12 @@
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
 }
 
+.sidebar h1 {
+  color: var(--text-primary);
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
 .header {
   margin-bottom: 25px;
 }
