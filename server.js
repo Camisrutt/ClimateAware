@@ -506,17 +506,17 @@ app.get('/api/debug', async (req, res) => {
     // Get article counts
     const counts = await db.getArticleCountsByCategory();
     
-    // Get a sample of 5 articles to verify content
-    const [rows] = await pool.execute('SELECT id, title, source, content_category FROM articles LIMIT 5');
+    // Get a sample of articles
+    const sampleArticles = await db.getArticles({ limit: 5 });
     
     res.json({
       success: true,
       dbConnected: connected,
       articleCounts: counts,
-      sampleArticles: rows,
+      sampleArticles,
       environment: {
         nodeEnv: process.env.NODE_ENV,
-        port: process.env.PORT || 3001
+        port: process.env.PORT || 8080
       }
     });
   } catch (error) {

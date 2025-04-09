@@ -139,9 +139,9 @@ async function getUnhealthyFeeds() {
 }
 
 // Get articles with optional filters
+// In db.js - modify the getArticles function
 async function getArticles(filters = {}) {
   try {
-    console.log('DB: Getting articles with filters:', filters);
     let query = `
       SELECT * FROM articles 
       WHERE 1=1
@@ -174,17 +174,19 @@ async function getArticles(filters = {}) {
       queryParams.push(new Date(filters.endDate));
     }
     
-    // Add sorting and limit
+    // Add sorting
     query += ` ORDER BY publication_date DESC`;
     
+    // CHANGE THIS SECTION - Use direct integer instead of parameter for LIMIT
     if (filters.limit) {
-      query += ` LIMIT ?`;
-      queryParams.push(parseInt(filters.limit));
+      // Use direct value instead of parameter
+      query += ` LIMIT ${parseInt(filters.limit)}`;
     }
     
     console.log('SQL Query:', query);
     console.log('Query Params:', queryParams);
     
+    // Now execute without the limit as a parameter
     const [rows] = await pool.execute(query, queryParams);
     console.log(`Found ${rows.length} articles`);
     return rows;
