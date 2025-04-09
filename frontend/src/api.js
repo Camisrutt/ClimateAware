@@ -9,13 +9,22 @@ export const fetchArticles = async (filters = {}) => {
       if (value && value !== 'all') queryParams.append(key, value);
     });
     
+    console.log(`Requesting articles from ${API_URL}/api/articles?${queryParams}`);
+    
     const response = await fetch(`${API_URL}/api/articles?${queryParams}`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log("API returned:", {
+      success: data.success,
+      articleCount: data.data?.length || 0,
+      metadata: data.metadata
+    });
+    
+    return data;
   } catch (error) {
     console.error('Error fetching articles:', error);
     throw error;

@@ -497,6 +497,36 @@ app.get('/test', (req, res) => {
     res.json({ message: 'Backend server is running!' });
 });
 
+app.get('/api/debug', async (req, res) => {
+  try {
+    // Test database connection
+    const connected = await db.testConnection();
+    
+    // Get article counts
+    const counts = await db.getArticleCountsByCategory();
+    
+    // Get a sample of 5 articles to verify content
+    const [rows] = await pool.execute('SELECT id, title, source, content_category FROM articles LIMIT 5');
+    
+    res.json({
+      success: true,
+      dbConnected: connected,
+      articleCounts: counts,
+      sampleArticles: rows,
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        port: process.env.PORT || 3001
+      }
+    });
+  } catch (error) {
+    console.error('Debug route error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Unknown error'
+    });
+  }
+});
+
 // Submit user survey
 // Replace these survey/feedback endpoints in server.js
 app.post('/api/survey', async (req, res) => {
@@ -511,16 +541,18 @@ app.post('/api/survey', async (req, res) => {
       });
     }
     
-    // Get IP and user agent for analytics
-    const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const user_agent = req.headers['user-agent'];
+    // Get IP and user agent for analytics - with better error handling
+    const ip_address = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const user_agent = req.headers['user-agent'] || '';
+    
+    console.log('Survey data:', { background, otherBackground, interest, affiliation, ip_address, user_agent });
     
     // Use db module to insert
     const result = await db.submitSurvey({
       background,
       otherBackground: otherBackground || null,
-      interest,
-      affiliation,
+      interest: interest || '',
+      affiliation: affiliation || '',
       ip_address,
       user_agent
     });
@@ -535,7 +567,7 @@ app.post('/api/survey', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to submit survey',
-      details: process.env.NODE_ENV === 'production' ? 'Server error' : error.message
+      details: error.message || 'Unknown error'
     });
   }
 });
@@ -554,8 +586,8 @@ app.post('/api/feedback', async (req, res) => {
     }
     
     // Get IP and user agent for analytics
-    const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const user_agent = req.headers['user-agent'];
+    const ip_address = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const user_agent = req.headers['user-agent'] || '';
     
 // Use db module to insert
 const result = await db.submitFeedback({

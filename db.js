@@ -141,6 +141,7 @@ async function getUnhealthyFeeds() {
 // Get articles with optional filters
 async function getArticles(filters = {}) {
   try {
+    console.log('DB: Getting articles with filters:', filters);
     let query = `
       SELECT * FROM articles 
       WHERE 1=1
