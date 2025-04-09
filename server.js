@@ -137,6 +137,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',  // Local development
   'https://ccarticle.org',   // Production frontend URL || Main frontend URL
+  'https://frontend-app-gcowc.ondigitalocean.app/', // Digital Ocean App Platform frontend URL (set this in environment variables)
   process.env.FRONTEND_URL, // Digital Ocean App Platform frontend URL (set this in environment variables)
   /\.ondigitalocean\.app$/, // Allow all DigitalOcean App Platform URLs
 ];
