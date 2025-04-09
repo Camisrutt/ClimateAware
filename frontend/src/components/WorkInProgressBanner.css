@@ -1,0 +1,40 @@
+/* WorkInProgressBanner.css */
+.wip-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(0, 0, 0, 0.7),
+      rgba(0, 0, 0, 0.7) 10px,
+      rgba(255, 204, 0, 0.7) 10px,
+      rgba(255, 204, 0, 0.7) 20px
+    );
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+  }
+  
+  .wip-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 20px;
+    text-align: center;
+  }
+  
+  .wip-text {
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  
+  /* Make text readable on both black and yellow stripes */
+  @media (max-width: 768px) {
+    .wip-text {
+      font-size: 0.75rem;
+      padding: 5px 0;
+    }
+  }

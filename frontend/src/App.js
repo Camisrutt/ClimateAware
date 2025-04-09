@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import UserSurvey from './components/UserSurvey';
 import FeedbackButton from './components/FeedbackButton';
+import WorkInProgressBanner from './components/WorkInProgressBanner'; // Import the WIP banner
 import { fetchArticles } from './api'; // Import the API function
+
 
 /**
  * Content category definitions for filtering articles
@@ -101,6 +103,7 @@ function App() {
   return (
     <div className="app">
       <UserSurvey onClose={(data) => console.log('Survey completed:', data)} />
+      <WorkInProgressBanner /> 
       <FeedbackButton />
 
       <div className="sidebar">

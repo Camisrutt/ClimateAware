@@ -502,7 +502,7 @@ app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     res.status(500).json({
         success: false,
-        error: 'Server error',
+        error: 'Server error AHHHH',
         message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
     });
 });
@@ -511,7 +511,7 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
     res.status(404).json({
         success: false,
-        error: 'Not found',
+        error: 'Not found AHHHH',
         message: `Route ${req.path} not found`
     });
 });
