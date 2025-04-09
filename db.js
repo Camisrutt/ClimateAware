@@ -139,6 +139,7 @@ async function getUnhealthyFeeds() {
 }
 
 // Get articles with optional filters
+// In db.js - modify the getArticles function
 async function getArticles(filters = {}) {
   try {
     let query = `
@@ -148,8 +149,11 @@ async function getArticles(filters = {}) {
     
     const queryParams = [];
     
+    // Debug incoming filters
+    console.log('Article filters:', JSON.stringify(filters));
+
     // Add filters if provided
-    if (filters.contentCategory) {
+    if (filters.contentCategory && filters.contentCategory !== 'all') {
       query += ` AND content_category = ?`;
       queryParams.push(filters.contentCategory);
     }
@@ -170,15 +174,21 @@ async function getArticles(filters = {}) {
       queryParams.push(new Date(filters.endDate));
     }
     
-    // Add sorting and limit
+    // Add sorting
     query += ` ORDER BY publication_date DESC`;
     
+    // CHANGE THIS SECTION - Use direct integer instead of parameter for LIMIT
     if (filters.limit) {
-      query += ` LIMIT ?`;
-      queryParams.push(parseInt(filters.limit));
+      // Use direct value instead of parameter
+      query += ` LIMIT ${parseInt(filters.limit)}`;
     }
     
+    console.log('SQL Query:', query);
+    console.log('Query Params:', queryParams);
+    
+    // Now execute without the limit as a parameter
     const [rows] = await pool.execute(query, queryParams);
+    console.log(`Found ${rows.length} articles`);
     return rows;
   } catch (err) {
     console.error('Error getting articles:', err);
@@ -253,6 +263,79 @@ async function fetchAndStoreArticles() {
   }
 }
 
+// Submit survey
+async function submitSurvey(data) {
+  try {
+    const [result] = await pool.execute(
+      'INSERT INTO user_surveys (background, other_background, interest, affiliation, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+      [data.background, data.otherBackground, data.interest, data.affiliation, data.ip_address, data.user_agent]
+    );
+    return { success: true, id: result.insertId };
+  } catch (err) {
+    console.error('Error submitting survey:', err);
+    throw err;
+  }
+}
+
+// Submit feedback
+async function submitFeedback(data) {
+  try {
+    const [result] = await pool.execute(
+      'INSERT INTO user_feedback (feedback_type, message, ip_address, user_agent) VALUES (?, ?, ?, ?)',
+      [data.type, data.message, data.ip_address, data.user_agent]
+    );
+    return { success: true, id: result.insertId };
+  } catch (err) {
+    console.error('Error submitting feedback:', err);
+    throw err;
+  }
+}
+
+// Get survey statistics
+async function getSurveyStats() {
+  try {
+    const [backgroundStats] = await pool.execute(
+      'SELECT background, COUNT(*) as count FROM user_surveys GROUP BY background ORDER BY count DESC'
+    );
+    
+    const [affiliationStats] = await pool.execute(
+      'SELECT affiliation, COUNT(*) as count FROM user_surveys GROUP BY affiliation ORDER BY count DESC'
+    );
+    
+    return {
+      backgroundStats,
+      affiliationStats,
+      totalResponses: backgroundStats.reduce((acc, stat) => acc + stat.count, 0)
+    };
+  } catch (err) {
+    console.error('Error getting survey stats:', err);
+    throw err;
+  }
+}
+
+// Get feedback statistics
+async function getFeedbackStats() {
+  try {
+    const [typeStats] = await pool.execute(
+      'SELECT feedback_type, COUNT(*) as count FROM user_feedback GROUP BY feedback_type ORDER BY count DESC'
+    );
+    
+    const [recentFeedback] = await pool.execute(
+      'SELECT * FROM user_feedback ORDER BY created_at DESC LIMIT 50'
+    );
+    
+    return {
+      typeStats,
+      recentFeedback,
+      totalFeedback: typeStats.reduce((acc, stat) => acc + stat.count, 0)
+    };
+  } catch (err) {
+    console.error('Error getting feedback stats:', err);
+    throw err;
+  }
+}
+
+// Update module exports
 module.exports = {
   testConnection,
   recordFeedAttempt,
@@ -261,5 +344,9 @@ module.exports = {
   getUnhealthyFeeds,
   getArticles,
   getArticleCountsByCategory,
-  fetchAndStoreArticles
+  fetchAndStoreArticles,
+  submitSurvey,           // New export
+  submitFeedback,         // New export 
+  getSurveyStats,         // New export
+  getFeedbackStats        // New export
 };

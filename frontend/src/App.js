@@ -38,7 +38,7 @@ function App() {
       // Use the filters from state
       const filters = {
         source: selectedSource,
-        category: selectedCategory,
+      //  category: selectedCategory, (Removed per requested change)
         contentCategory: selectedContentCategory
       };
       
@@ -91,14 +91,19 @@ function App() {
 
   // Safe filtering with type checking
   const filteredArticles = Array.isArray(articles) 
-    ? articles.filter(article => {
-        const sourceMatch = selectedSource === 'all' || article.source === selectedSource;
-        const categoryMatch = selectedCategory === 'all' || article.category === selectedCategory;
-        const contentCategoryMatch = selectedContentCategory === 'all' || 
-                                   article.contentCategory === selectedContentCategory;
-        return sourceMatch && categoryMatch && contentCategoryMatch;
-      })
-    : [];
+  ? articles.filter(article => {
+      const sourceMatch = selectedSource === 'all' || article.source === selectedSource;
+      // We're not using selectedCategory directly in API filters, but still filtering locally
+      const categoryMatch = selectedCategory === 'all' || article.category === selectedCategory;
+      // This should already be filtered by the API, but double-check locally
+      const contentCategoryMatch = selectedContentCategory === 'all' || 
+                                  article.contentCategory === selectedContentCategory;
+      
+      console.log(`Article: ${article.title}, Matches: `, {sourceMatch, categoryMatch, contentCategoryMatch});
+      
+      return sourceMatch && categoryMatch && contentCategoryMatch;
+    })
+  : [];
 
   return (
     <div className="app">

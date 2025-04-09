@@ -137,6 +137,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',  // Local development
   'https://ccarticle.org',   // Production frontend URL || Main frontend URL
+  'https://frontend-app-gcowc.ondigitalocean.app/', // Digital Ocean App Platform frontend URL (set this in environment variables)
   process.env.FRONTEND_URL, // Digital Ocean App Platform frontend URL (set this in environment variables)
   /\.ondigitalocean\.app$/, // Allow all DigitalOcean App Platform URLs
 ];
@@ -422,7 +423,7 @@ app.get('/api/articles', async (req, res) => {
     try {
         // Get filters from query parameters
         const filters = {
-            contentCategory: req.query.category,
+            contentCategory: req.query.contentCategory,
             source: req.query.source,
             startDate: req.query.startDate,
             endDate: req.query.endDate,
@@ -497,6 +498,176 @@ app.get('/test', (req, res) => {
     res.json({ message: 'Backend server is running!' });
 });
 
+app.get('/api/debug', async (req, res) => {
+  try {
+    // Test database connection
+    const connected = await db.testConnection();
+    
+    // Get article counts
+    const counts = await db.getArticleCountsByCategory();
+    
+    // Get a sample of articles
+    const sampleArticles = await db.getArticles({ limit: 5 });
+    
+    res.json({
+      success: true,
+      dbConnected: connected,
+      articleCounts: counts,
+      sampleArticles,
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        port: process.env.PORT || 8080
+      }
+    });
+  } catch (error) {
+    console.error('Debug route error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Unknown error'
+    });
+  }
+});
+
+// Submit user survey
+// Replace these survey/feedback endpoints in server.js
+app.post('/api/survey', async (req, res) => {
+  try {
+    const { background, otherBackground, interest, affiliation } = req.body;
+    
+    // Basic validation
+    if (!background) {
+      return res.status(400).json({
+        success: false,
+        error: 'Background is required'
+      });
+    }
+    
+    // Get IP and user agent for analytics - with better error handling
+    const ip_address = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const user_agent = req.headers['user-agent'] || '';
+    
+    console.log('Survey data:', { background, otherBackground, interest, affiliation, ip_address, user_agent });
+    
+    // Use db module to insert
+    const result = await db.submitSurvey({
+      background,
+      otherBackground: otherBackground || null,
+      interest: interest || '',
+      affiliation: affiliation || '',
+      ip_address,
+      user_agent
+    });
+    
+    res.json({
+      success: true,
+      message: 'Survey submitted successfully',
+      id: result.id
+    });
+  } catch (error) {
+    console.error('Error submitting survey:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit survey',
+      details: error.message || 'Unknown error'
+    });
+  }
+});
+
+// Submit user feedback
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { type, message } = req.body;
+    
+    // Basic validation
+    if (!message || !message.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Feedback message is required'
+      });
+    }
+    
+    // Get IP and user agent for analytics
+    const ip_address = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const user_agent = req.headers['user-agent'] || '';
+    
+// Use db module to insert
+const result = await db.submitFeedback({
+  type,
+  message,
+  ip_address,
+  user_agent
+});
+
+res.json({
+  success: true,
+  message: 'Feedback submitted successfully',
+  id: result.id
+});
+} catch (error) {
+console.error('Error submitting feedback:', error);
+res.status(500).json({
+  success: false,
+  error: 'Failed to submit feedback',
+  details: process.env.NODE_ENV === 'production' ? 'Server error' : error.message
+});
+}
+});
+
+// Get survey statistics - FIXED VERSION
+app.get('/api/survey-stats', async (req, res) => {
+try {
+// Check for authentication
+const apiKey = req.headers['x-api-key'];
+if (apiKey !== process.env.ADMIN_API_KEY) {
+  return res.status(401).json({
+    success: false,
+    error: 'Unauthorized'
+  });
+}
+
+const stats = await db.getSurveyStats();
+
+res.json({
+  success: true,
+  data: stats
+});
+} catch (error) {
+console.error('Error getting survey stats:', error);
+res.status(500).json({
+  success: false,
+  error: 'Failed to get survey statistics'
+});
+}
+});
+
+// Get feedback statistics - FIXED VERSION
+app.get('/api/feedback-stats', async (req, res) => {
+try {
+// Check for authentication
+const apiKey = req.headers['x-api-key'];
+if (apiKey !== process.env.ADMIN_API_KEY) {
+  return res.status(401).json({
+    success: false,
+    error: 'Unauthorized'
+  });
+}
+
+const stats = await db.getFeedbackStats();
+
+res.json({
+  success: true,
+  data: stats
+});
+} catch (error) {
+console.error('Error getting feedback stats:', error);
+res.status(500).json({
+  success: false,
+  error: 'Failed to get feedback statistics'
+});
+}
+});
+
+
 // Error handler middleware
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
@@ -516,6 +687,13 @@ app.use((req, res) => {
     });
 });
 
+console.log('Registered Routes:');
+app._router.stack.forEach(r => {
+  if (r.route && r.route.path) {
+    console.log(`${Object.keys(r.route.methods).join(',')} ${r.route.path}`);
+  }
+});
+
 // Start the server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, '0.0.0.0', () => {
@@ -533,155 +711,27 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-app.use(express.json());
 
-// Submit user survey
-app.post('/api/survey', async (req, res) => {
-  try {
-    const { background, otherBackground, interest, affiliation } = req.body;
-    
-    // Basic validation
-    if (!background) {
-      return res.status(400).json({
-        success: false,
-        error: 'Background is required'
-      });
-    }
-    
-    // Get IP and user agent for analytics
-    const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const user_agent = req.headers['user-agent'];
-    
-    // Insert into database
-    const [result] = await pool.execute(
-      'INSERT INTO user_surveys (background, other_background, interest, affiliation, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
-      [background, otherBackground || null, interest, affiliation, ip_address, user_agent]
-    );
-    
-    res.json({
-      success: true,
-      message: 'Survey submitted successfully',
-      id: result.insertId
-    });
-  } catch (error) {
-    console.error('Error submitting survey:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to submit survey',
-      details: process.env.NODE_ENV === 'production' ? 'Server error' : error.message
-    });
-  }
-});
+// Telling Server to fetch articles!!!
 
-// Submit user feedback
-app.post('/api/feedback', async (req, res) => {
+// Fetch articles on startup and every 3 hours
+(async function() {
   try {
-    const { type, message } = req.body;
-    
-    // Basic validation
-    if (!message || !message.trim()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Feedback message is required'
-      });
-    }
-    
-    // Get IP and user agent for analytics
-    const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const user_agent = req.headers['user-agent'];
-    
-    // Insert into database
-    const [result] = await pool.execute(
-      'INSERT INTO user_feedback (feedback_type, message, ip_address, user_agent) VALUES (?, ?, ?, ?)',
-      [type, message, ip_address, user_agent]
-    );
-    
-    res.json({
-      success: true,
-      message: 'Feedback submitted successfully',
-      id: result.insertId
-    });
+    console.log('Initial article fetch on startup...');
+    await fetchArticles();
+    console.log('Initial article fetch completed.');
   } catch (error) {
-    console.error('Error submitting feedback:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to submit feedback',
-      details: process.env.NODE_ENV === 'production' ? 'Server error' : error.message
-    });
+    console.error('Error during initial article fetch:', error);
   }
-});
-
-// Get survey statistics (admin or analytics endpoint)
-app.get('/api/survey-stats', async (req, res) => {
-  try {
-    // Check for some kind of authentication here
-    // This is just an example - implement proper auth
-    const apiKey = req.headers['x-api-key'];
-    if (apiKey !== process.env.ADMIN_API_KEY) {
-      return res.status(401).json({
-        success: false,
-        error: 'Unauthorized'
-      });
+  
+  // Schedule periodic fetching
+  setInterval(async () => {
+    try {
+      console.log('Scheduled article fetch starting...');
+      await fetchArticles();
+      console.log('Scheduled article fetch completed.');
+    } catch (error) {
+      console.error('Error during scheduled article fetch:', error);
     }
-    
-    const [backgroundStats] = await pool.execute(
-      'SELECT background, COUNT(*) as count FROM user_surveys GROUP BY background ORDER BY count DESC'
-    );
-    
-    const [affiliationStats] = await pool.execute(
-      'SELECT affiliation, COUNT(*) as count FROM user_surveys GROUP BY affiliation ORDER BY count DESC'
-    );
-    
-    res.json({
-      success: true,
-      data: {
-        backgroundStats,
-        affiliationStats,
-        totalResponses: backgroundStats.reduce((acc, stat) => acc + stat.count, 0)
-      }
-    });
-  } catch (error) {
-    console.error('Error getting survey stats:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get survey statistics'
-    });
-  }
-});
-
-// Get feedback statistics (admin or analytics endpoint)
-app.get('/api/feedback-stats', async (req, res) => {
-  try {
-    // Check for some kind of authentication here
-    const apiKey = req.headers['x-api-key'];
-    if (apiKey !== process.env.ADMIN_API_KEY) {
-      return res.status(401).json({
-        success: false,
-        error: 'Unauthorized'
-      });
-    }
-    
-    const [typeStats] = await pool.execute(
-      'SELECT feedback_type, COUNT(*) as count FROM user_feedback GROUP BY feedback_type ORDER BY count DESC'
-    );
-    
-    const [recentFeedback] = await pool.execute(
-      'SELECT * FROM user_feedback ORDER BY created_at DESC LIMIT 50'
-    );
-    
-    res.json({
-      success: true,
-      data: {
-        typeStats,
-        recentFeedback,
-        totalFeedback: typeStats.reduce((acc, stat) => acc + stat.count, 0)
-      }
-    });
-  } catch (error) {
-    console.error('Error getting feedback stats:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get feedback statistics'
-    });
-  }
-});
+  }, 6 * 60 * 60 * 1000); // 6 hours in milliseconds
+})();
