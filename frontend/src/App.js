@@ -38,22 +38,25 @@ function App() {
       // Use the filters from state
       const filters = {
         source: selectedSource,
-      //  category: selectedCategory, (Removed per requested change)
         contentCategory: selectedContentCategory
       };
       
+      console.log("Sending filters to API:", filters);
+      
       const responseData = await fetchArticles(filters);
+      console.log("API response:", responseData);
       
       // Data validation
       if (!responseData.success) {
         throw new Error(responseData.error || 'Invalid data format received');
       }
-
+  
       // Ensure we're setting an array
       const articlesData = Array.isArray(responseData.data) 
         ? responseData.data 
         : responseData.data.all || [];
-
+  
+      console.log("Articles data:", articlesData);
       setArticles(articlesData);
       
       // Set category counts from the metadata if available
@@ -80,6 +83,11 @@ function App() {
     getArticles();
   }, []); // Empty dependency array means this runs once on component mount
 
+  useEffect(() => {
+    // When the user changes the content category, fetch new articles
+    getArticles();
+  }, [selectedContentCategory]); // This will run whenever selectedContentCategory changes
+
   // Safely extract unique values
   const sources = ['all', ...new Set(Array.isArray(articles) 
     ? articles.map(article => article.source)
@@ -95,11 +103,11 @@ function App() {
       const sourceMatch = selectedSource === 'all' || article.source === selectedSource;
       // We're not using selectedCategory directly in API filters, but still filtering locally
       const categoryMatch = selectedCategory === 'all' || article.category === selectedCategory;
-      // This should already be filtered by the API, but double-check locally
-      const contentCategoryMatch = selectedContentCategory === 'all' || 
-                                  article.contentCategory === selectedContentCategory;
       
-      console.log(`Article: ${article.title}, Matches: `, {sourceMatch, categoryMatch, contentCategoryMatch});
+      // More flexible content category matching (case insensitive)
+      const contentCategoryMatch = selectedContentCategory === 'all' || 
+                                 (article.contentCategory && 
+                                  article.contentCategory.toLowerCase() === selectedContentCategory.toLowerCase());
       
       return sourceMatch && categoryMatch && contentCategoryMatch;
     })

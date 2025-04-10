@@ -429,9 +429,13 @@ app.get('/api/articles', async (req, res) => {
             endDate: req.query.endDate,
             limit: req.query.limit || 100
         };
+        console.log("Received filter request:", filters);
         
         // Get articles from database
         const articles = await db.getArticles(filters);
+        console.log(`Found ${articles.length} articles with filters:`, filters);
+        
+        // Get health metrics and counts
         const healthMetrics = await db.getAllFeedsHealth();
         const counts = await db.getArticleCountsByCategory();
         
