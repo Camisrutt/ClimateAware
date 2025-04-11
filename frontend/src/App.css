@@ -1,4 +1,10 @@
 /* App.css */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 :root {
   --bg-primary: #1a1a1a;
   --bg-secondary: #2d2d2d;
@@ -11,7 +17,6 @@
   --border-color: #404040;
   --hover-color: #404040;
   --sidebar-width: 250px;
-}
 
 /* Keep all previous styles for body, .app, and .sidebar */
 
@@ -228,4 +233,9 @@
 
 .article-card[data-category="science_other"] {
   border-left: 3px solid #95a5a6;
+}
+
+@media (max-width: 768px) {
+  --sidebar-width: 200px;
+}
 }
