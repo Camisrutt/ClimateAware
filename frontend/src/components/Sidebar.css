@@ -1,6 +1,6 @@
 /* Sidebar.css */
 .sidebar {
-    background-color:var(--accent-primary);
+    background-color:var(--bg-primary);
     border-right: none;
     box-shadow: none;
     padding: 20px;
@@ -15,7 +15,7 @@
   
   .globe-container {
     position: fixed;
-    top: 30px; /* Match the sidebar margin-top to account for warning banner */
+    top: 0; /* Match the sidebar margin-top to account for warning banner */
     left: 0;
     width: 250px; /* Same as sidebar width */
     height: auto;
