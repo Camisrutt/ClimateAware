@@ -131,9 +131,15 @@
 
 /* Sidebar specific styles */
 .sidebar {
-  background-color: transparent;
-  border-right: none; 
-  box-shadow: none;
+  background-color: var(--bg-secondary);
+  padding: 20px;
+  width: var(--sidebar-width);
+  margin-top: 50px;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-color);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar h1 {
