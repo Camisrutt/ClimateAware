@@ -1,25 +1,16 @@
 /* Sidebar.css */
 .sidebar {
-    background-color: transparent; /* Remove background color to let globe show through */
-    padding: 20px;
-    width: var(--sidebar-width);
-    position: fixed;
-    height: 100vh;
-    overflow-y: auto;
-    border-right: 1px solid var(--border-color);
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    margin-top: 50px; /* Account for the warning banner */
-    z-index: 1; /* Ensure content stays above the globe image */
+    background-color: transparent;
+    border-right: none; /* Remove border */
+    box-shadow: none;
   }
   
   .globe-container {
     position: fixed;
-    top: 50px; /* Match the sidebar margin-top to account for warning banner */
+    top: 30px; /* Match the sidebar margin-top to account for warning banner */
     left: 0;
     width: 250px; /* Same as sidebar width */
-    height: 100vh;
+    height: 120vh;
     z-index: -2; /* Behind the overlay */
     overflow: visible; /* Allow image to extend beyond container */
   }
@@ -28,9 +19,9 @@
     position: absolute;
     width: 300%; /* Much wider to fully cover the sidebar */
     height: auto; /* Maintain aspect ratio */
-    top: 0;
-    left: -100%; /* Pull left to position better */
-    transform: scale(1.5); /* Make the globe bigger */
+    top: -20px;
+    left: -80%; /* Pull left to position better */
+    transform: scale(1.6); /* Make the globe bigger */
     max-width: none; /* Override any max-width constraints */
     object-fit: contain;
   }
