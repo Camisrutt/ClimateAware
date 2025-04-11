@@ -16,9 +16,6 @@ export const ArticleView = () => {
 };
 
 // MapView.js
-import React from 'react';
-import './PlaceholderViews.css';
-
 export const MapView = () => {
   return (
     <div className="placeholder-view">
@@ -65,9 +62,6 @@ export const MapView = () => {
 };
 
 // CommunityView.js
-import React from 'react';
-import './PlaceholderViews.css';
-
 export const CommunityView = () => {
   return (
     <div className="placeholder-view">
@@ -96,9 +90,6 @@ export const CommunityView = () => {
 };
 
 // SearchView.js
-import React, { useState } from 'react';
-import './PlaceholderViews.css';
-
 export const SearchView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
