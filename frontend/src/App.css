@@ -140,7 +140,6 @@
  color: var(---bg-primary);
   padding: 20px;
   width: var(--sidebar-width);
-  margin-top: 20px;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
@@ -150,7 +149,7 @@
 .sidebar h1 {
   color: var(--text-primary);
   font-size: 20px;
-  margin-bottom: 20px;
+  margin-top: 50px;
 }
 
 .header {
