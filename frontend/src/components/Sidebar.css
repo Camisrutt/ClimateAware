@@ -1,0 +1,108 @@
+/* Sidebar.css */
+.sidebar {
+    background-color: var(--bg-secondary);
+    padding: 20px;
+    width: var(--sidebar-width);
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid var(--border-color);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .globe-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 0;
+    opacity: 0.7;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .globe-image {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    object-position: bottom center;
+  }
+  
+  .header, .controls {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .header {
+    margin-bottom: 25px;
+  }
+  
+  .header h1 {
+    color: var(--text-primary);
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+    line-height: 1.2;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  }
+  
+  .header p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 0;
+    line-height: 1.4;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  .select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+  }
+  
+  .refresh-button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .refresh-button:hover {
+    background-color: var(--accent-secondary);
+  }
+  
+  .category-counts {
+    margin: 15px 0;
+    padding: 10px;
+    background-color: rgba(26, 26, 26, 0.7);
+    border-radius: 4px;
+  }
+  
+  .category-count {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+  }
+  
+  .category-label {
+    font-weight: 500;
+  }
+  
+  .count {
+    background-color: var(--accent-primary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+  }

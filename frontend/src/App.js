@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import UserSurvey from './components/UserSurvey';
 import FeedbackButton from './components/FeedbackButton';
-import WorkInProgressBanner from './components/WorkInProgressBanner'; // Import the WIP banner
-import { fetchArticles } from './api'; // Import the API function
-
+import WorkInProgressBanner from './components/WorkInProgressBanner';
+import Sidebar from './components/Sidebar'; // Import the new Sidebar component
+import { fetchArticles } from './api';
 
 /**
  * Content category definitions for filtering articles
@@ -18,7 +18,7 @@ const CONTENT_CATEGORIES = {
 
 function App() {
   // State Management with proper initialization
-  const [articles, setArticles] = useState([]); // Initialize as empty array
+  const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSource, setSelectedSource] = useState('all');
@@ -119,66 +119,20 @@ function App() {
       <WorkInProgressBanner /> 
       <FeedbackButton />
 
-      <div className="sidebar">
-        <header className="header">
-          <h1>Climate Change News Tracker</h1>
-          <p>Aggregating important climate change articles from trusted sources</p>
-        </header>
-
-        <div className="controls">
-          <select 
-            value={selectedContentCategory}
-            onChange={(e) => setSelectedContentCategory(e.target.value)}
-            className="select"
-          >
-            {Object.entries(CONTENT_CATEGORIES).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-
-          <select 
-            value={selectedSource}
-            onChange={(e) => setSelectedSource(e.target.value)}
-            className="select"
-          >
-            {sources.map(source => (
-              <option key={source} value={source}>
-                {source.charAt(0).toUpperCase() + source.slice(1)}
-              </option>
-            ))}
-          </select>
-
-          <select 
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="select"
-          >
-            {categories.map(category => (
-              <option key={category} value={category}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </option>
-            ))}
-          </select>
-
-          <div className="category-counts">
-            {Object.entries(CONTENT_CATEGORIES).map(([category, label]) => {
-              if (category === 'all') return null;
-              return (
-                <div key={category} className="category-count">
-                  <span className="category-label">{label}:</span>
-                  <span className="count">{categoryCounts[category] || 0}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <button onClick={getArticles} className="refresh-button">
-            Find Info
-          </button>
-        </div>
-      </div>
+      {/* Replace the old sidebar with the new Sidebar component */}
+      <Sidebar 
+        selectedContentCategory={selectedContentCategory}
+        setSelectedContentCategory={setSelectedContentCategory}
+        selectedSource={selectedSource}
+        setSelectedSource={setSelectedSource}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        sources={sources}
+        categories={categories}
+        categoryCounts={categoryCounts}
+        CONTENT_CATEGORIES={CONTENT_CATEGORIES}
+        getArticles={getArticles}
+      />
 
       <main className="main-content">
         {loading && <div className="loading">Loading articles...</div>}
