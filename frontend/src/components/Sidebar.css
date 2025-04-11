@@ -19,7 +19,7 @@
     position: absolute;
     width: 125%; /* Much wider to fully cover the sidebar */
     height: auto; /* Maintain aspect ratio */
-    bottom: 50px;
+    bottom: auto;
     /* top: -20px; */
     /* left: 80%; Pull left to position better */
     transform: scale(1.3); /* Make the globe bigger */
