@@ -15,22 +15,25 @@
   
   .globe-container {
     position: fixed;
-    top: 0; /* Match the sidebar margin-top to account for warning banner */
+    top: 0;
     left: 0;
     width: 250px; /* Same as sidebar width */
-    height: auto;
-    z-index: 1; /* Behind the overlay */
-    overflow: visible; /* Allow image to extend beyond container */
+    height: 100vh; /* Use viewport height instead of auto */
+    z-index: -1; /* Keep it behind the content */
+    display: flex; /* Enable flexbox */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    overflow: hidden; /* Changed from visible to avoid scrollbars */
   }
   
   .globe-image {
-    position: absolute;
-    width: 125%; /* Much wider to fully cover the sidebar */
+    position: relative; /* Changed from absolute */
+    width: 250px; /* Set a fixed width */
     height: auto; /* Maintain aspect ratio */
-    margin-bottom: 80px;
     transform: scale(1.6); /* Make the globe bigger */
-    max-width: none; /* Override any max-width constraints */
+    opacity: 0.3; /* Make it more subtle so text is readable */
     object-fit: contain;
+    pointer-events: none; /* Prevent it from blocking clicks */
   }
   
   /* Add a semi-transparent overlay to improve text readability */
