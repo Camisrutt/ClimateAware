@@ -140,7 +140,7 @@
  color: var(---bg-primary);
   padding: 20px;
   width: var(--sidebar-width);
-  margin-top: 50px;
+  margin-top: 20px;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
