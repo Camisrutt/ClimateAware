@@ -5,7 +5,7 @@ import FeedbackButton from './components/FeedbackButton';
 import WorkInProgressBanner from './components/WorkInProgressBanner';
 import Sidebar from './components/Sidebar';
 import DataView from './components/DataView';
-import { ArticleView, MapView, CommunityView, SearchView } from './components/PlaceholderViews.js';
+import { ArticleView, MapView, CommunityView, SearchView } from './components/PlaceholderViews';
 import { fetchArticles } from './api';
 
 // View types for navigation
@@ -16,9 +16,7 @@ const VIEWS = {
   DATA: 'data',
   COMMUNITY: 'community',
   SEARCH: 'search',
-  };
-
-
+};
 
 /**
  * Content category definitions for filtering articles
@@ -209,5 +207,38 @@ function App() {
         );
     }
   };
+
+  // THIS RETURN STATEMENT WAS MISSING!
+  return (
+    <div className="app">
+      <UserSurvey onClose={(data) => console.log('Survey completed:', data)} />
+      <WorkInProgressBanner /> 
+      <FeedbackButton />
+
+      <Sidebar 
+        selectedContentCategory={selectedContentCategory}
+        setSelectedContentCategory={setSelectedContentCategory}
+        selectedSource={selectedSource}
+        setSelectedSource={setSelectedSource}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        sources={sources}
+        categories={categories}
+        categoryCounts={categoryCounts}
+        CONTENT_CATEGORIES={CONTENT_CATEGORIES}
+        getArticles={getArticles}
+        // New props for navigation
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        currentSubView={currentSubView}
+        setCurrentSubView={setCurrentSubView}
+      />
+
+      <main className="main-content">
+        {renderCurrentView()}
+      </main>
+    </div>
+  );
 }
+
 export default App;
