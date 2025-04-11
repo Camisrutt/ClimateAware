@@ -1,6 +1,6 @@
 /* Sidebar.css */
 .sidebar {
-    background-color:var(--bg-primary);
+    background-color:var(--bg-secondary);
     border-right: none;
     box-shadow: none;
     padding: 20px;
@@ -27,7 +27,7 @@
     position: absolute;
     width: 125%; /* Much wider to fully cover the sidebar */
     height: auto; /* Maintain aspect ratio */
-    bottom: auto;
+    bottom: -100px;
     transform: scale(1.4); /* Make the globe bigger */
     max-width: none; /* Override any max-width constraints */
     object-fit: contain;
