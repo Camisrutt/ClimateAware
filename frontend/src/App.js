@@ -3,8 +3,22 @@ import './App.css';
 import UserSurvey from './components/UserSurvey';
 import FeedbackButton from './components/FeedbackButton';
 import WorkInProgressBanner from './components/WorkInProgressBanner';
-import Sidebar from './components/Sidebar'; // Import the new Sidebar component
+import Sidebar from './components/Sidebar';
+import DataView from './components/DataView';
+import { ArticleView, MapView, CommunityView, SearchView } from './components/PlaceholderViews.js';
 import { fetchArticles } from './api';
+
+// View types for navigation
+const VIEWS = {
+  ARTICLE: 'article',
+  CATEGORY: 'category', // Original view with article grid
+  MAP: 'map',
+  DATA: 'data',
+  COMMUNITY: 'community',
+  SEARCH: 'search',
+  };
+
+
 
 /**
  * Content category definitions for filtering articles
@@ -29,6 +43,10 @@ function App() {
     climate_related: 0,
     science_other: 0
   });
+  
+  // New state for navigation
+  const [currentView, setCurrentView] = useState(VIEWS.CATEGORY); // Default to category view (original)
+  const [currentSubView, setCurrentSubView] = useState(null);
 
   const getArticles = async () => {
     try {
@@ -113,83 +131,83 @@ function App() {
     })
   : [];
 
-  return (
-    <div className="app">
-      <UserSurvey onClose={(data) => console.log('Survey completed:', data)} />
-      <WorkInProgressBanner /> 
-      <FeedbackButton />
+  // Render the appropriate view based on currentView state
+  const renderCurrentView = () => {
+    switch(currentView) {
+      case VIEWS.ARTICLE:
+        return <ArticleView />;
+      
+      case VIEWS.MAP:
+        return <MapView />;
+      
+      case VIEWS.DATA:
+        return <DataView currentSubView={currentSubView} />;
+      
+      case VIEWS.COMMUNITY:
+        return <CommunityView />;
+      
+      case VIEWS.SEARCH:
+        return <SearchView />;
+      
+      case VIEWS.CATEGORY:
+      default:
+        return (
+          <>
+            {loading && <div className="loading">Loading articles...</div>}
+            
+            {error && <div className="error">{error}</div>}
+            
+            {!loading && !error && filteredArticles.length === 0 && (
+              <div className="no-articles">
+                No articles found. Try refreshing or changing filters.
+              </div>
+            )}
 
-      {/* Replace the old sidebar with the new Sidebar component */}
-      <Sidebar 
-        selectedContentCategory={selectedContentCategory}
-        setSelectedContentCategory={setSelectedContentCategory}
-        selectedSource={selectedSource}
-        setSelectedSource={setSelectedSource}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        sources={sources}
-        categories={categories}
-        categoryCounts={categoryCounts}
-        CONTENT_CATEGORIES={CONTENT_CATEGORIES}
-        getArticles={getArticles}
-      />
-
-      <main className="main-content">
-        {loading && <div className="loading">Loading articles...</div>}
-        
-        {error && <div className="error">{error}</div>}
-        
-        {!loading && !error && filteredArticles.length === 0 && (
-          <div className="no-articles">
-            No articles found. Try refreshing or changing filters.
-          </div>
-        )}
-
-        <div className="articles-grid">
-          {filteredArticles.map((article, index) => (
-            <article 
-              key={index} 
-              className="article-card"
-              data-category={article.contentCategory || 'science_other'}
-            >
-              <div className="article-header">
-                <span className="category">
-                  {CONTENT_CATEGORIES[article.contentCategory] || article.category}
-                </span>
-                <a 
-                  href={article.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="source"
+            <div className="articles-grid">
+              {filteredArticles.map((article, index) => (
+                <article 
+                  key={index} 
+                  className="article-card"
+                  data-category={article.contentCategory || 'science_other'}
                 >
-                  {article.source}
-                </a>
-              </div>
-              
-              <a 
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="title"
-              >
-                {article.title}
-              </a>
-              
-              <p className="summary">{article.summary}</p>
-              
-              <div className="date">
-                {new Date(article.date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </div>
-            </article>
-          ))}
-        </div>
-      </main>
-    </div>
-  );
+                  <div className="article-header">
+                    <span className="category">
+                      {CONTENT_CATEGORIES[article.contentCategory] || article.category}
+                    </span>
+                    <a 
+                      href={article.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="source"
+                    >
+                      {article.source}
+                    </a>
+                  </div>
+                  
+                  <a 
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="title"
+                  >
+                    {article.title}
+                  </a>
+                  
+                  <p className="summary">{article.summary}</p>
+                  
+                  <div className="date">
+                    {new Date(article.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
+        );
+    }
+  };
 }
-
 export default App;

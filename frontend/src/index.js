@@ -11,6 +11,14 @@ import App from './App';
 // Import performance monitoring utility
 import reportWebVitals from './reportWebVitals';
 
+export { default as Sidebar } from './Sidebar';
+export { default as UserSurvey } from './UserSurvey';
+export { default as FeedbackButton } from './FeedbackButton';
+export { default as WorkInProgressBanner } from './WorkInProgressBanner';
+export { default as DataView } from './DataView';
+export { ArticleView, MapView, CommunityView, SearchView } from './PlaceholderViews';
+
+
 /**
  * Create Root Element
  * This is the main entry point for the React application

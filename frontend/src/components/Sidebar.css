@@ -1,8 +1,16 @@
 /* Sidebar.css */
 .sidebar {
     background-color: transparent;
-    border-right: none; /* Remove border */
+    border-right: none;
     box-shadow: none;
+    padding: 20px;
+    width: var(--sidebar-width);
+    margin-top: 50px;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
   }
   
   .globe-container {
@@ -20,8 +28,6 @@
     width: 125%; /* Much wider to fully cover the sidebar */
     height: auto; /* Maintain aspect ratio */
     bottom: auto;
-    /* top: -20px; */
-    /* left: 80%; Pull left to position better */
     transform: scale(1.3); /* Make the globe bigger */
     max-width: none; /* Override any max-width constraints */
     object-fit: contain;
@@ -43,7 +49,7 @@
     z-index: -1; /* Above the globe but below content */
   }
   
-  .header, .controls {
+  .header, .controls, .sidebar-nav {
     position: relative; /* Keep these above the overlay */
     z-index: 2;
   }
@@ -69,6 +75,78 @@
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   }
   
+  /* New sidebar navigation styles */
+  .sidebar-nav {
+    margin-bottom: 20px;
+  }
+  
+  .nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+  }
+  
+  .nav-item {
+    margin-bottom: 8px;
+  }
+  
+  .nav-item button {
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    background-color: rgba(26, 26, 26, 0.6);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-item button:hover {
+    background-color: rgba(45, 45, 45, 0.8);
+    border-color: var(--accent-primary);
+  }
+  
+  .nav-item.active button {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+  
+  .dropdown-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .subnav-list {
+    list-style: none;
+    padding: 0;
+    margin: 5px 0 10px 15px;
+  }
+  
+  .subnav-item {
+    padding: 8px 15px;
+    margin-bottom: 5px;
+    background-color: rgba(64, 64, 64, 0.6);
+    color: var(--text-secondary);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+  }
+  
+  .subnav-item:hover {
+    background-color: rgba(90, 90, 90, 0.8);
+    color: var(--text-primary);
+  }
+  
+  .subnav-item.active {
+    background-color: var(--accent-secondary);
+    color: white;
+  }
+  
+  /* Original control styles */
   .select {
     width: 100%;
     padding: 8px;
