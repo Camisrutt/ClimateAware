@@ -16,7 +16,7 @@
   --accent-success: #2ecc71;
   --border-color: #404040;
   --hover-color: #404040;
-  --sidebar-width: 350px;
+  --sidebar-width: 400px;
 
 /* Keep all previous styles for body, .app, and .sidebar */
 
@@ -149,7 +149,7 @@
 .sidebar h1 {
   color: var(--text-primary);
   font-size: 20px;
-  margin-top: 50px;
+ /*  margin-top: 50px; */
 }
 
 .header {

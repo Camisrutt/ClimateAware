@@ -17,9 +17,9 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 350px; /* Same as sidebar width */
+    width: 400px; /* Same as sidebar width */
     height: 100vh; /* Use viewport height instead of auto */
-    z-index: -1; /* Keep it behind the content */
+    z-index: 1; /* Keep it behind the content */
     display: flex; /* Enable flexbox */
     justify-content: center; /* Center horizontally */
     align-items: center; /* Center vertically */
