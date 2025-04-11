@@ -139,7 +139,6 @@
   height: 100vh;
   overflow-y: auto;
   border-right: 1px solid var(--border-color);
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar h1 {
