@@ -18,8 +18,8 @@
     top: 30px; /* Match the sidebar margin-top to account for warning banner */
     left: 0;
     width: 250px; /* Same as sidebar width */
-    height: 120vh;
-    z-index: -2; /* Behind the overlay */
+    height: auto;
+    z-index: 0; /* Behind the overlay */
     overflow: visible; /* Allow image to extend beyond container */
   }
   
