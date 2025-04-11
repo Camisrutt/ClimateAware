@@ -134,6 +134,7 @@
   background-color: var(--bg-secondary);
   padding: 20px;
   width: var(--sidebar-width);
+  margin-top: 50px;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
