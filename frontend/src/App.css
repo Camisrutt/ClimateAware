@@ -137,6 +137,7 @@
 /* Sidebar specific styles */
 .sidebar {
  /*  background-color: var(--bg-secondary); */
+ color: var(---bg-primary);
   padding: 20px;
   width: var(--sidebar-width);
   margin-top: 50px;
