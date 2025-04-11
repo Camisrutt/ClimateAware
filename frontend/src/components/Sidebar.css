@@ -27,8 +27,8 @@
     position: absolute;
     width: 125%; /* Much wider to fully cover the sidebar */
     height: auto; /* Maintain aspect ratio */
-    margin-bottom: 50px;
-    transform: scale(1.4); /* Make the globe bigger */
+    margin-bottom: 80px;
+    transform: scale(1.6); /* Make the globe bigger */
     max-width: none; /* Override any max-width constraints */
     object-fit: contain;
   }
