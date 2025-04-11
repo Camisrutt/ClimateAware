@@ -1,6 +1,6 @@
 /* Sidebar.css */
 .sidebar {
-    background-color: transparent;
+    background-color:var(--accent-primary);
     border-right: none;
     box-shadow: none;
     padding: 20px;
