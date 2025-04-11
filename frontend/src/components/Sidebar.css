@@ -11,27 +11,28 @@
     display: flex;
     flex-direction: column;
     margin-top: 50px; /* Account for the warning banner */
+    z-index: 1; /* Ensure content stays above the globe image */
   }
   
   .globe-container {
     position: fixed;
     top: 50px; /* Match the sidebar margin-top to account for warning banner */
     left: 0;
-    width: var(--sidebar-width);
+    width: 250px; /* Same as sidebar width */
     height: 100vh;
-    z-index: -1;
-    overflow: hidden;
+    z-index: -2; /* Behind the overlay */
+    overflow: visible; /* Allow image to extend beyond container */
   }
   
   .globe-image {
     position: absolute;
-    width: 150%; /* Make it wider than the sidebar */
-    max-height: none;
-    height: 150vh; /* Make it taller than the viewport */
-    object-fit: cover;
-    object-position: left center;
-    left: -25%; /* Pull it to the left to show more of the right side of the globe */
-    bottom: -30%; /* Position it so the bottom part of the globe is visible */
+    width: 300%; /* Much wider to fully cover the sidebar */
+    height: auto; /* Maintain aspect ratio */
+    top: 0;
+    left: -100%; /* Pull left to position better */
+    transform: scale(1.5); /* Make the globe bigger */
+    max-width: none; /* Override any max-width constraints */
+    object-fit: contain;
   }
   
   /* Add a semi-transparent overlay to improve text readability */
@@ -44,16 +45,15 @@
     height: 100vh;
     background: linear-gradient(
       to bottom,
-      rgba(45, 45, 45, 0.85) 0%,
-      rgba(45, 45, 45, 0.7) 40%,
-      rgba(45, 45, 45, 0.3) 100%
+      rgba(45, 45, 45, 0.65) 0%,
+      rgba(45, 45, 45, 0.4) 100%
     );
-    z-index: -1;
+    z-index: -1; /* Above the globe but below content */
   }
   
   .header, .controls {
-    position: relative;
-    z-index: 1;
+    position: relative; /* Keep these above the overlay */
+    z-index: 2;
   }
   
   .header {
@@ -81,7 +81,7 @@
     width: 100%;
     padding: 8px;
     margin-bottom: 10px;
-    background-color: rgba(26, 26, 26, 0.7);
+    background-color: rgba(26, 26, 26, 0.6);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -106,7 +106,7 @@
   .category-counts {
     margin: 15px 0;
     padding: 10px;
-    background-color: rgba(26, 26, 26, 0.7);
+    background-color: rgba(26, 26, 26, 0.6);
     border-radius: 4px;
   }
   
