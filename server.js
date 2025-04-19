@@ -644,6 +644,112 @@ res.status(500).json({
 }
 });
 
+/**
+ * Search articles endpoint
+ * This allows searching across all articles with various filters
+ */
+app.get('/api/search', async (req, res) => {
+  try {
+    const searchTerm = req.query.q || '';
+    const source = req.query.source;
+    const contentCategory = req.query.contentCategory;
+    const titleOnly = req.query.titleOnly === 'true';
+    const recentOnly = req.query.recentOnly === 'true';
+    const limit = parseInt(req.query.limit || '50');
+    
+    console.log('Search request:', {
+      searchTerm,
+      source,
+      contentCategory,
+      titleOnly,
+      recentOnly,
+      limit
+    });
+    
+    // Build the base SQL query
+    let query = `
+      SELECT * FROM articles 
+      WHERE 1=1
+    `;
+    
+    const queryParams = [];
+    
+    // Add search term filter - basic LIKE search
+    if (searchTerm) {
+      if (titleOnly) {
+        query += ` AND title LIKE ?`;
+        queryParams.push(`%${searchTerm}%`);
+      } else {
+        query += ` AND (title LIKE ? OR summary LIKE ?)`;
+        queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+      }
+    }
+    
+    // Add source filter if provided
+    if (source && source !== 'all') {
+      query += ` AND source = ?`;
+      queryParams.push(source);
+    }
+    
+    // Add content category filter if provided
+    if (contentCategory && contentCategory !== 'all') {
+      query += ` AND content_category = ?`;
+      queryParams.push(contentCategory);
+    }
+    
+    // Add recent only filter (last 3 months)
+    if (recentOnly) {
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      
+      query += ` AND publication_date >= ?`;
+      queryParams.push(threeMonthsAgo.toISOString());
+    }
+    
+    // Add sorting and limit
+    query += ` ORDER BY publication_date DESC LIMIT ${parseInt(limit)}`;
+    
+    console.log('SQL Query:', query);
+    console.log('Query Params:', queryParams);
+    
+    // Execute the query
+    const [rows] = await pool.execute(query, queryParams);
+    
+    // Get total count for pagination
+    let totalCount = rows.length;
+    if (rows.length === limit) {
+      // Only do a COUNT query if we might have more results
+      const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total').split('ORDER BY')[0];
+      const [countResult] = await pool.execute(countQuery, queryParams);
+      totalCount = countResult[0].total;
+    }
+    
+    console.log(`Found ${rows.length} search results out of ${totalCount} total matches`);
+    
+    res.json({
+      success: true,
+      data: rows,
+      metadata: {
+        totalResults: totalCount,
+        searchTerm,
+        filters: {
+          source,
+          contentCategory,
+          titleOnly,
+          recentOnly
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error in search:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search articles',
+      details: error.message || 'Unknown error'
+    });
+  }
+});
+
 // Get feedback statistics - FIXED VERSION
 app.get('/api/feedback-stats', async (req, res) => {
 try {

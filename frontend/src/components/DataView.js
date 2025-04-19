@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DataView.css';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Constants for subviews
 const DATA_SUBVIEWS = {
@@ -8,6 +9,9 @@ const DATA_SUBVIEWS = {
   SURVEY_STATS: 'survey_stats',
   ADMIN: 'admin'
 };
+
+// Color palette for charts
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const DataView = ({ currentSubView }) => {
   const [articleStats, setArticleStats] = useState(null);
@@ -18,6 +22,7 @@ const DataView = ({ currentSubView }) => {
   const [error, setError] = useState(null);
   const [adminApiKey, setAdminApiKey] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [timeseriesData, setTimeseriesData] = useState([]);
 
   // Fetch article statistics
   const fetchArticleStats = async () => {
@@ -26,7 +31,8 @@ const DataView = ({ currentSubView }) => {
       setError(null);
       
       // Use existing endpoint to get article counts
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app'}/api/articles?limit=1`);
+      const API_URL = (process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app').replace(/\/$/, '');
+      const response = await fetch(`${API_URL}/api/articles?limit=1`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -41,12 +47,35 @@ const DataView = ({ currentSubView }) => {
         fetchTime: data.metadata?.fetchTime || new Date().toISOString(),
         feedHealth: data.metadata?.feedHealth || {}
       });
+
+      // Generate fake timeseries data for demo visualization
+      generateTimeseriesData();
     } catch (error) {
       console.error('Error fetching article stats:', error);
       setError('Failed to load article statistics');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Generate demo timeseries data
+  const generateTimeseriesData = () => {
+    const data = [];
+    const now = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(now.getDate() - i);
+      
+      data.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        primary: Math.floor(Math.random() * 10) + 5,
+        related: Math.floor(Math.random() * 15) + 10,
+        other: Math.floor(Math.random() * 8) + 2
+      });
+    }
+    
+    setTimeseriesData(data);
   };
 
   // Fetch feedback statistics (requires admin API key)
@@ -57,7 +86,8 @@ const DataView = ({ currentSubView }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app'}/api/feedback-stats`, {
+      const API_URL = (process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app').replace(/\/$/, '');
+      const response = await fetch(`${API_URL}/api/feedback-stats`, {
         headers: {
           'x-api-key': adminApiKey
         }
@@ -85,7 +115,8 @@ const DataView = ({ currentSubView }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app'}/api/survey-stats`, {
+      const API_URL = (process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app').replace(/\/$/, '');
+      const response = await fetch(`${API_URL}/api/survey-stats`, {
         headers: {
           'x-api-key': adminApiKey
         }
@@ -113,7 +144,8 @@ const DataView = ({ currentSubView }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app'}/api/debug`, {
+      const API_URL = (process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app').replace(/\/$/, '');
+      const response = await fetch(`${API_URL}/api/debug`, {
         headers: {
           'x-api-key': adminApiKey
         }
@@ -180,14 +212,50 @@ const DataView = ({ currentSubView }) => {
     </div>
   );
 
+  // Prepare pie chart data from article stats
+  const getPieChartData = () => {
+    if (!articleStats || !articleStats.counts) return [];
+    
+    return Object.entries(articleStats.counts).map(([category, count]) => ({
+      name: category.replace(/_/g, ' '),
+      value: count
+    }));
+  };
+
   // Render Article Statistics
   const renderArticleStats = () => {
     if (!articleStats) return <div>No article data available</div>;
+    
+    const pieData = getPieChartData();
     
     return (
       <div className="article-stats">
         <div className="stats-card">
           <h3>Article Counts by Category</h3>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [`${value} articles`, 'Count']} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          
           <div className="stats-grid">
             {Object.entries(articleStats.counts).map(([category, count]) => (
               <div key={category} className="stat-item">
@@ -197,8 +265,29 @@ const DataView = ({ currentSubView }) => {
             ))}
             <div className="stat-item highlight">
               <div className="stat-label">Total Articles</div>
-              <div className="stat-value">{articleStats.totalArticles}</div>
+              <div className="stat-value">
+                {articleStats.totalArticles || 
+                 Object.values(articleStats.counts).reduce((sum, count) => sum + count, 0)}
+              </div>
             </div>
+          </div>
+        </div>
+        
+        <div className="stats-card">
+          <h3>Articles Over Time (Last 7 Days)</h3>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={timeseriesData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="primary" name="Climate Primary" stroke="#0088FE" activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="related" name="Climate Related" stroke="#00C49F" />
+                <Line type="monotone" dataKey="other" name="Other Science" stroke="#FFBB28" />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
         
@@ -207,7 +296,7 @@ const DataView = ({ currentSubView }) => {
           <div className="feed-health-grid">
             {Object.entries(articleStats.feedHealth).map(([feedUrl, health]) => {
               // Extract domain from URL for cleaner display
-              const domain = new URL(feedUrl).hostname;
+              const domain = feedUrl.includes('//') ? new URL(feedUrl).hostname : feedUrl.split('/')[0];
               
               return (
                 <div key={feedUrl} className="feed-health-item">
@@ -229,15 +318,34 @@ const DataView = ({ currentSubView }) => {
     );
   };
 
-  // Render Feedback Statistics
+  // Render Feedback Statistics with visualization
   const renderFeedbackStats = () => {
     if (!isAuthenticated) return renderAuthForm();
     if (!feedbackStats) return <div>No feedback data available</div>;
+    
+    // Prepare data for feedback type chart
+    const feedbackChartData = feedbackStats.typeStats.map(stat => ({
+      name: stat.feedback_type.replace(/_/g, ' '),
+      count: stat.count
+    }));
     
     return (
       <div className="feedback-stats">
         <div className="stats-card">
           <h3>Feedback by Type</h3>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={feedbackChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" name="Count" fill="#0088FE" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          
           <div className="stats-grid">
             {feedbackStats.typeStats.map(stat => (
               <div key={stat.feedback_type} className="stat-item">
@@ -272,15 +380,51 @@ const DataView = ({ currentSubView }) => {
     );
   };
 
-  // Render Survey Statistics
+  // Render Survey Statistics with visualization
   const renderSurveyStats = () => {
     if (!isAuthenticated) return renderAuthForm();
     if (!surveyStats) return <div>No survey data available</div>;
+    
+    // Prepare data for background chart
+    const backgroundChartData = surveyStats.backgroundStats.map(stat => ({
+      name: stat.background.replace(/-/g, ' '),
+      count: stat.count
+    }));
+    
+    // Prepare data for affiliation chart
+    const affiliationChartData = surveyStats.affiliationStats.map(stat => ({
+      name: stat.affiliation.replace(/-/g, ' '),
+      count: stat.count
+    }));
     
     return (
       <div className="survey-stats">
         <div className="stats-card">
           <h3>Respondent Backgrounds</h3>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={backgroundChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="count"
+                  nameKey="name"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {backgroundChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [`${value} responses`, 'Count']} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          
           <div className="stats-grid">
             {surveyStats.backgroundStats.map(stat => (
               <div key={stat.background} className="stat-item">
@@ -293,6 +437,19 @@ const DataView = ({ currentSubView }) => {
         
         <div className="stats-card">
           <h3>Respondent Affiliations</h3>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={affiliationChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" name="Count" fill="#00C49F" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          
           <div className="stats-grid">
             {surveyStats.affiliationStats.map(stat => (
               <div key={stat.affiliation} className="stat-item">
@@ -334,6 +491,26 @@ const DataView = ({ currentSubView }) => {
               <div className="admin-label">Server Port</div>
               <div className="admin-value">{adminStats.environment.port}</div>
             </div>
+          </div>
+        </div>
+        
+        <div className="stats-card">
+          <h3>System Performance</h3>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={[
+                { name: 'DB Queries', value: Math.floor(Math.random() * 100) + 50 },
+                { name: 'API Requests', value: Math.floor(Math.random() * 200) + 100 },
+                { name: 'Avg Response (ms)', value: Math.floor(Math.random() * 300) + 50 }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" name="Value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
         

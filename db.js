@@ -196,6 +196,83 @@ async function getArticles(filters = {}) {
   }
 }
 
+/**
+ * Search articles with various filters
+ * @param {Object} params - Search parameters
+ * @returns {Promise<Array>} - Array of matching articles
+ */
+async function searchArticles(params = {}) {
+  try {
+    const {
+      searchTerm,
+      source,
+      contentCategory,
+      titleOnly = false,
+      recentOnly = false,
+      limit = 50,
+      offset = 0
+    } = params;
+    
+    // Build the base SQL query
+    let query = `
+      SELECT * FROM articles 
+      WHERE 1=1
+    `;
+    
+    const queryParams = [];
+    
+    // Add search term filter - basic LIKE search
+    if (searchTerm) {
+      if (titleOnly) {
+        query += ` AND title LIKE ?`;
+        queryParams.push(`%${searchTerm}%`);
+      } else {
+        query += ` AND (title LIKE ? OR summary LIKE ?)`;
+        queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+      }
+    }
+    
+    // Add source filter if provided
+    if (source && source !== 'all') {
+      query += ` AND source = ?`;
+      queryParams.push(source);
+    }
+    
+    // Add content category filter if provided
+    if (contentCategory && contentCategory !== 'all') {
+      query += ` AND content_category = ?`;
+      queryParams.push(contentCategory);
+    }
+    
+    // Add recent only filter (last 3 months)
+    if (recentOnly) {
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      
+      query += ` AND publication_date >= ?`;
+      queryParams.push(threeMonthsAgo.toISOString());
+    }
+    
+    // Add sorting
+    query += ` ORDER BY publication_date DESC`;
+    
+    // Add pagination
+    query += ` LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
+    
+    console.log('Search SQL Query:', query);
+    console.log('Search Query Params:', queryParams);
+    
+    // Execute the query
+    const [rows] = await pool.execute(query, queryParams);
+    console.log(`Found ${rows.length} search results`);
+    
+    return rows;
+  } catch (err) {
+    console.error('Error in searchArticles:', err);
+    return [];
+  }
+}
+
 // Get article counts by category
 async function getArticleCountsByCategory() {
   try {
@@ -348,5 +425,6 @@ module.exports = {
   submitSurvey,           // New export
   submitFeedback,         // New export 
   getSurveyStats,         // New export
-  getFeedbackStats        // New export
+  getFeedbackStats,        // New export
+  searchArticles
 };
