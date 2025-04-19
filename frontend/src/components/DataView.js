@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DataView.css';
+
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Constants for subviews
