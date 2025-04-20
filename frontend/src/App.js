@@ -117,14 +117,23 @@ function App() {
   // Safe filtering with type checking
   const filteredArticles = Array.isArray(articles) 
   ? articles.filter(article => {
+      // Source filtering
       const sourceMatch = selectedSource === 'all' || article.source === selectedSource;
-      // We're not using selectedCategory directly in API filters, but still filtering locally
-      const categoryMatch = selectedCategory === 'all' || article.category === selectedCategory;
       
-      // More flexible content category matching (case insensitive)
+      // Category filtering (more flexible)
+      const categoryMatch = selectedCategory === 'all' || 
+                          (article.category && article.category.toLowerCase() === selectedCategory.toLowerCase());
+      
+      // Content category filtering (more robust)
       const contentCategoryMatch = selectedContentCategory === 'all' || 
-                                 (article.contentCategory && 
-                                  article.contentCategory.toLowerCase() === selectedContentCategory.toLowerCase());
+                                (article.contentCategory && 
+                                 article.contentCategory.toLowerCase() === selectedContentCategory.toLowerCase());
+      
+      // Debug logging to see what's happening with filtering
+      console.log(`Article: ${article.title}`);
+      console.log(`- Content Category: ${article.contentCategory}`);
+      console.log(`- Selected Category: ${selectedContentCategory}`);
+      console.log(`- Match: ${contentCategoryMatch}`);
       
       return sourceMatch && categoryMatch && contentCategoryMatch;
     })
