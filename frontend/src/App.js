@@ -5,7 +5,8 @@ import FeedbackButton from './components/FeedbackButton';
 import WorkInProgressBanner from './components/WorkInProgressBanner';
 import Sidebar from './components/Sidebar';
 import DataView from './components/DataView';
-import { ArticleView, MapView, CommunityView, SearchView } from './components/PlaceholderViews';
+import SearchView from './components/SearchView';
+import { ArticleView, MapView, CommunityView } from './components/PlaceholderViews';
 import { fetchArticles } from './api';
 
 // View types for navigation
