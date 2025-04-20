@@ -143,28 +143,28 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-    // origin: '*',
-    origin: function(origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        // Check if origin is allowed
-        const isAllowed = allowedOrigins.some(allowedOrigin => {
-            if (allowedOrigin instanceof RegExp) {
-                return allowedOrigin.test(origin);
-            }
-            return allowedOrigin === origin;
-        });
-        
-        if (isAllowed) {
-            return callback(null, true);
-        }
-        
-        callback(new Error('Not allowed by CORS'));
-    },
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+  // origin: '*',
+  origin: function(origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Check if origin is allowed
+      const isAllowed = allowedOrigins.some(allowedOrigin => {
+          if (allowedOrigin instanceof RegExp) {
+              return allowedOrigin.test(origin);
+          }
+          return allowedOrigin === origin;
+      });
+      
+      if (isAllowed) {
+          return callback(null, true);
+      }
+      
+      callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+  credentials: true
 }));
 
 // Add JSON body parser
