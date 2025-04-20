@@ -7,7 +7,7 @@ import Sidebar from './components/Sidebar';
 import DataView from './components/DataView';
 import SearchView from './components/SearchView.js';
 import { ArticleView, MapView, CommunityView } from './components/PlaceholderViews';
-import { fetchArticles } from './api';
+import { fetchArticles, submitSurvey, submitFeedback } from './api';
 
 // View types for navigation
 const VIEWS = {
@@ -32,7 +32,7 @@ const CONTENT_CATEGORIES = {
 function App() {
   // State Management with proper initialization
   const [isAdmin, setIsAdmin] = useState(false);
-const [adminApiKey, setAdminApiKey] = useState('');
+  const [adminApiKey, setAdminApiKey] = useState('');
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
