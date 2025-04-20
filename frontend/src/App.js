@@ -5,7 +5,7 @@ import FeedbackButton from './components/FeedbackButton';
 import WorkInProgressBanner from './components/WorkInProgressBanner';
 import Sidebar from './components/Sidebar';
 import DataView from './components/DataView';
-import SearchView from './components/SearchView';
+import SearchView from './components/SearchView.js';
 import { ArticleView, MapView, CommunityView } from './components/PlaceholderViews';
 import { fetchArticles } from './api';
 
