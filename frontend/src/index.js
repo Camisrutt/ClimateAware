@@ -16,7 +16,8 @@ export { default as UserSurvey } from './components/UserSurvey';
 export { default as FeedbackButton } from './components/FeedbackButton';
 export { default as WorkInProgressBanner } from './components/WorkInProgressBanner';
 export { default as DataView } from './components/DataView';
-export { ArticleView, MapView, CommunityView, SearchView } from './components/PlaceholderViews';
+export { default as SearchView } from './components/SearchView';
+export { ArticleView, MapView, CommunityView } from './components/PlaceholderViews';
 
 
 /**
