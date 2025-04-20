@@ -74,3 +74,25 @@ export const submitFeedback = async (feedbackData) => {
     throw error;
   }
 };
+
+export const markArticleImportant = async (articleId, isImportant, apiKey) => {
+  try {
+    const response = await fetch(`${API_URL}/api/mark-important`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey
+      },
+      body: JSON.stringify({ articleId, isImportant })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error marking article as important:', error);
+    throw error;
+  }
+};

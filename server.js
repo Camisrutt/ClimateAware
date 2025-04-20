@@ -750,6 +750,72 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
+// Get all important articles
+app.get('/api/important-articles', async (req, res) => {
+  try {
+    const articles = await db.getImportantArticles();
+    
+    res.json({
+      success: true,
+      data: articles,
+      metadata: {
+        totalImportant: articles.length
+      }
+    });
+  } catch (error) {
+    console.error('Error in /api/important-articles:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch important articles',
+      details: error.message || 'Unknown error'
+    });
+  }
+});
+
+// Mark an article as important (admin only)
+app.post('/api/mark-important', async (req, res) => {
+  try {
+    // Check for authentication
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey !== process.env.ADMIN_API_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized'
+      });
+    }
+    
+    const { articleId, isImportant } = req.body;
+    
+    if (!articleId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Article ID is required'
+      });
+    }
+    
+    const result = await db.markArticleImportant(
+      articleId, 
+      isImportant !== false // Default to true if not specified
+    );
+    
+    if (result) {
+      res.json({
+        success: true,
+        message: `Article ${articleId} has been ${isImportant !== false ? 'marked' : 'unmarked'} as important`
+      });
+    } else {
+      throw new Error('Failed to update article importance status');
+    }
+  } catch (error) {
+    console.error('Error in /api/mark-important:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update article importance status',
+      details: error.message || 'Unknown error'
+    });
+  }
+});
+
 // Get feedback statistics - FIXED VERSION
 app.get('/api/feedback-stats', async (req, res) => {
 try {

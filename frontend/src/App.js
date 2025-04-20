@@ -31,6 +31,8 @@ const CONTENT_CATEGORIES = {
 
 function App() {
   // State Management with proper initialization
+  const [isAdmin, setIsAdmin] = useState(false);
+const [adminApiKey, setAdminApiKey] = useState('');
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -139,6 +141,30 @@ function App() {
     })
   : [];
 
+  const handleMarkImportant = async (articleId, isImportant) => {
+    try {
+      if (!adminApiKey) {
+        const key = prompt('Enter admin API key to mark articles as important:');
+        if (!key) return;
+        setAdminApiKey(key);
+      }
+      
+      await markArticleImportant(articleId, isImportant, adminApiKey);
+      
+      // Refresh articles to update the view
+      getArticles();
+      
+      // Set admin state if not already set
+      if (!isAdmin) {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error('Error marking article as important:', error);
+      alert('Failed to mark article as important. Check your API key and try again.');
+      setAdminApiKey(''); // Reset API key on error
+    }
+  };
+
   // Render the appropriate view based on currentView state
   const renderCurrentView = () => {
     switch(currentView) {
@@ -174,43 +200,56 @@ function App() {
             <div className="articles-grid">
               {filteredArticles.map((article, index) => (
                 <article 
-                  key={index} 
-                  className="article-card"
-                  data-category={article.contentCategory || 'science_other'}
-                >
-                  <div className="article-header">
-                    <span className="category">
-                      {CONTENT_CATEGORIES[article.contentCategory] || article.category}
-                    </span>
-                    <a 
-                      href={article.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="source"
-                    >
-                      {article.source}
-                    </a>
-                  </div>
-                  
+                key={index} 
+                className={`article-card ${article.is_important ? 'important' : ''}`}
+                data-category={article.contentCategory || 'science_other'}
+              >
+                {article.is_important && <span className="important-badge">Important</span>}
+                
+                {/* For admin users, add ability to mark as important */}
+                {isAdmin && (
+                  <button 
+                    className={`mark-important-button ${article.is_important ? 'active' : ''}`}
+                    onClick={() => handleMarkImportant(article.id, !article.is_important)}
+                    title={article.is_important ? "Unmark as important" : "Mark as important"}
+                  >
+                    ★
+                  </button>
+                )}
+                
+                <div className="article-header">
+                  <span className="category">
+                    {CONTENT_CATEGORIES[article.contentCategory] || article.category}
+                  </span>
                   <a 
-                    href={article.url}
+                    href={article.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="title"
+                    className="source"
                   >
-                    {article.title}
+                    {article.source}
                   </a>
-                  
-                  <p className="summary">{article.summary}</p>
-                  
-                  <div className="date">
-                    {new Date(article.date).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </div>
-                </article>
+                </div>
+                
+                <a 
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="title"
+                >
+                  {article.title}
+                </a>
+                
+                <p className="summary">{article.summary}</p>
+                
+                <div className="date">
+                  {new Date(article.date || article.publication_date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </div>
+              </article>
               ))}
             </div>
           </>

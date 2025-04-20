@@ -151,8 +151,8 @@ async function getArticles(filters = {}) {
     
     // Debug incoming filters
     console.log('Article filters:', JSON.stringify(filters));
-
-    // Add filters if provided
+    
+    // Standard filters
     if (filters.contentCategory && filters.contentCategory !== 'all') {
       query += ` AND content_category = ?`;
       queryParams.push(filters.contentCategory);
@@ -163,7 +163,6 @@ async function getArticles(filters = {}) {
       queryParams.push(filters.source);
     }
     
-    // Add date range if provided
     if (filters.startDate) {
       query += ` AND publication_date >= ?`;
       queryParams.push(new Date(filters.startDate));
@@ -177,19 +176,41 @@ async function getArticles(filters = {}) {
     // Add sorting
     query += ` ORDER BY publication_date DESC`;
     
-    // CHANGE THIS SECTION - Use direct integer instead of parameter for LIMIT
+    // Use direct value instead of parameter for LIMIT
     if (filters.limit) {
-      // Use direct value instead of parameter
       query += ` LIMIT ${parseInt(filters.limit)}`;
     }
     
     console.log('SQL Query:', query);
     console.log('Query Params:', queryParams);
     
-    // Now execute without the limit as a parameter
-    const [rows] = await pool.execute(query, queryParams);
-    console.log(`Found ${rows.length} articles`);
-    return rows;
+    // First, get the articles matching the filters
+    const [filteredRows] = await pool.execute(query, queryParams);
+    
+    // If we're viewing all or climate_primary, we also want to include important articles
+    let combinedResults = [...filteredRows];
+    
+    if (!filters.contentCategory || filters.contentCategory === 'all' || 
+        filters.contentCategory === 'climate_primary') {
+      // Get all important articles
+      const importantArticles = await getImportantArticles();
+      
+      // Add important articles that aren't already in the results
+      // (to avoid duplicates)
+      importantArticles.forEach(article => {
+        if (!combinedResults.some(a => a.id === article.id)) {
+          combinedResults.push(article);
+        }
+      });
+      
+      // Re-sort by date
+      combinedResults.sort((a, b) => 
+        new Date(b.publication_date) - new Date(a.publication_date)
+      );
+    }
+    
+    console.log(`Found ${combinedResults.length} articles (including important ones)`);
+    return combinedResults;
   } catch (err) {
     console.error('Error getting articles:', err);
     return [];
@@ -412,6 +433,37 @@ async function getFeedbackStats() {
   }
 }
 
+// Get all important articles regardless of other filters
+async function getImportantArticles() {
+  try {
+    const [rows] = await pool.execute(`
+      SELECT * FROM articles 
+      WHERE is_important = TRUE
+      ORDER BY publication_date DESC
+    `);
+    
+    console.log(`Found ${rows.length} important articles`);
+    return rows;
+  } catch (err) {
+    console.error('Error getting important articles:', err);
+    return [];
+  }
+}
+
+// Mark or unmark an article as important
+async function markArticleImportant(articleId, isImportant) {
+  try {
+    await pool.execute(
+      'CALL mark_article_important(?, ?)',
+      [articleId, isImportant]
+    );
+    return true;
+  } catch (err) {
+    console.error(`Error marking article ${articleId} as important:`, err);
+    return false;
+  }
+}
+
 // Update module exports
 module.exports = {
   testConnection,
@@ -426,5 +478,8 @@ module.exports = {
   submitFeedback,         // New export 
   getSurveyStats,         // New export
   getFeedbackStats,        // New export
-  searchArticles
+  searchArticles,
+  getImportantArticles,
+  markArticleImportant
+
 };
