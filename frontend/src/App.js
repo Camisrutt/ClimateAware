@@ -7,7 +7,7 @@ import Sidebar from './components/Sidebar';
 import DataView from './components/DataView';
 import SearchView from './components/SearchView.js';
 import { ArticleView, MapView, CommunityView } from './components/PlaceholderViews';
-import { fetchArticles, submitSurvey, submitFeedback } from './api';
+import { fetchArticles, submitSurvey, submitFeedback, markArticleImportant } from './api';
 
 // View types for navigation
 const VIEWS = {
