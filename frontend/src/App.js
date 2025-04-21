@@ -126,16 +126,23 @@ function App() {
       const categoryMatch = selectedCategory === 'all' || 
                           (article.category && article.category.toLowerCase() === selectedCategory.toLowerCase());
       
-      // Content category filtering (more robust)
-      const contentCategoryMatch = selectedContentCategory === 'all' || 
-                                (article.contentCategory && 
-                                 article.contentCategory.toLowerCase() === selectedContentCategory.toLowerCase());
+      // Content category filtering - FIXED
+      // There's a property naming mismatch between API response and frontend
+      // Database uses content_category but frontend might be looking for contentCategory
       
-      // Debug logging to see what's happening with filtering
-      console.log(`Article: ${article.title}`);
-      console.log(`- Content Category: ${article.contentCategory}`);
-      console.log(`- Selected Category: ${selectedContentCategory}`);
-      console.log(`- Match: ${contentCategoryMatch}`);
+      // Extract the content category value using multiple possible property names
+      const articleContentCategory = article.content_category || article.contentCategory;
+      
+      // Match the selected content category with the article's content category
+      const contentCategoryMatch = selectedContentCategory === 'all' || 
+                               (articleContentCategory && 
+                                articleContentCategory.toLowerCase() === selectedContentCategory.toLowerCase());
+      
+      // Debug logging - uncomment for troubleshooting
+      // console.log(`Article: ${article.title}`);
+      // console.log(`- Content Category: ${articleContentCategory}`);
+      // console.log(`- Selected Category: ${selectedContentCategory}`);
+      // console.log(`- Match: ${contentCategoryMatch}`);
       
       return sourceMatch && categoryMatch && contentCategoryMatch;
     })

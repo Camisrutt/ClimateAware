@@ -1,12 +1,28 @@
 const API_URL = (process.env.REACT_APP_API_URL || 'https://geog-web-app-fiddr.ondigitalocean.app').replace(/\/$/, '');
 
+const normalizeArticle = (article) => {
+  // Create a normalized copy of the article
+  return {
+    ...article,
+    // Ensure consistent property naming for the frontend
+    contentCategory: article.content_category || article.contentCategory,
+    // You can add more normalizations here if needed
+    date: article.publication_date || article.date
+  };
+};
+
+
 // Fetch articles with optional filters
 export const fetchArticles = async (filters = {}) => {
   try {
     // Convert filters object to URL query parameters
     const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value && value !== 'all') queryParams.append(key, value);
+      if (value && value !== 'all') {
+        // Convert contentCategory to content_category for the API
+        const apiKey = key === 'contentCategory' ? 'content_category' : key;
+        queryParams.append(apiKey, value);
+      }
     });
     
     console.log(`Requesting articles from ${API_URL}/api/articles?${queryParams}`);
@@ -18,6 +34,12 @@ export const fetchArticles = async (filters = {}) => {
     }
     
     const data = await response.json();
+    
+    // Normalize the article data
+    if (data.data && Array.isArray(data.data)) {
+      data.data = data.data.map(normalizeArticle);
+    }
+    
     console.log("API returned:", {
       success: data.success,
       articleCount: data.data?.length || 0,
@@ -30,6 +52,7 @@ export const fetchArticles = async (filters = {}) => {
     throw error;
   }
 };
+
 
 // Submit user survey
 export const submitSurvey = async (surveyData) => {
